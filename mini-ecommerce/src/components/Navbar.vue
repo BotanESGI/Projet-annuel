@@ -9,30 +9,31 @@
         <!-- Menu desktop -->
         <div class="hidden md:flex space-x-8 items-center">
 
-          <a href="#" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="home" />
             <span>Accueil</span>
-          </a>
+          </router-link>
 
-          <a href="#" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/produits" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="box-open" />
             <span>Nos produits</span>
-          </a>
+          </router-link>
 
-          <a href="#" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/a-propos" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="info-circle" />
             <span>À propos</span>
-          </a>
+          </router-link>
 
-          <a href="#" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/contact" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="envelope" />
             <span>Contact</span>
-          </a>
+          </router-link>
 
-          <a href="#" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/compte" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user" />
             <span>Mon compte</span>
-          </a>
+          </router-link>
+
 
           <!-- Panier avec dropdown -->
           <div class="relative" @mouseenter="showCart = true" @mouseleave="showCart = false">
