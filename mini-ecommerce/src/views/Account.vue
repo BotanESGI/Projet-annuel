@@ -1,31 +1,66 @@
 <template>
-  <div class="max-w-xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Mon compte</h1>
-
-    <form @submit.prevent="mettreAJourCompte" class="space-y-4">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-xl w-full space-y-8 bg-white p-8 rounded-lg shadow">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Nom</label>
-        <input v-model="utilisateur.nom" type="text" required class="mt-1 w-full border rounded px-3 py-2" />
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">
+          Mon compte
+        </h2>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input v-model="utilisateur.email" type="email" required class="mt-1 w-full border rounded px-3 py-2" />
-      </div>
+      <form class="mt-8 space-y-6" @submit.prevent="mettreAJourCompte">
+        <div class="rounded-md shadow-sm space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nom</label>
+            <input
+                v-model="utilisateur.nom"
+                type="text"
+                required
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+            />
+          </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
-        <input v-model="utilisateur.motdepasse" type="password" class="mt-1 w-full border rounded px-3 py-2" />
-        <p class="text-sm text-gray-500">Laisse vide pour ne pas le modifier</p>
-      </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <input
+                v-model="utilisateur.email"
+                type="email"
+                required
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+            />
+          </div>
 
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        Enregistrer
-      </button>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">
+              Mot de passe
+            </label>
+            <input
+                v-model="utilisateur.motdepasse"
+                type="password"
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+            />
+            <p class="mt-1 text-sm text-gray-500">
+              Laissez vide pour ne pas modifier
+            </p>
+          </div>
+        </div>
 
-      <p v-if="confirmation" class="text-green-600 mt-4">Informations mises à jour !</p>
-      <p v-if="erreur" class="text-red-600 mt-4">{{ erreur }}</p>
-    </form>
+        <div>
+          <button
+              type="submit"
+              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Mettre à jour
+          </button>
+        </div>
+
+        <div v-if="confirmation" class="text-green-600 text-center">
+          Informations mises à jour !
+        </div>
+        <div v-if="erreur" class="text-red-600 text-center">
+          {{ erreur }}
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
