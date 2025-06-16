@@ -3,6 +3,8 @@ import Product from '../views/Product.vue'
 import About from '../views/About.vue'
 import Contact from '../views/Contact.vue'
 import Account from '../views/Account.vue'
+import Login from '../views/Login.vue'
+import Register from '../views/Register.vue'
 
 const routes = [
     {
@@ -24,6 +26,16 @@ const routes = [
         path: '/compte',
         name: 'Compte',
         component: Account
+    },
+    {
+        path: '/connexion',
+        name: 'Login',
+        component: Login
+    },
+    {
+        path: '/inscription',
+        name: 'Register',
+        component: Register
     },
 ]
 

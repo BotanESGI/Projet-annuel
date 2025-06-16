@@ -5,8 +5,8 @@ import App from './App.vue'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons'
-
+import { faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart, faRightToBracket, faUserPlus, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+library.add(faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart, faRightToBracket, faUserPlus, faRightFromBracket)
 import router from './router'
 
 library.add(faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart)

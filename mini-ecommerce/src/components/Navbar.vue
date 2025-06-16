@@ -34,6 +34,22 @@
             <span>Mon compte</span>
           </router-link>
 
+          <router-link to="/connexion" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+            <font-awesome-icon icon="right-to-bracket" />
+            <span>Connexion</span>
+          </router-link>
+
+          <router-link to="/inscription" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+            <font-awesome-icon icon="user-plus" />
+            <span>Inscription</span>
+          </router-link>
+
+          <router-link to="/" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+            <font-awesome-icon icon="right-from-bracket" />
+            <span>Déconnexion</span>
+          </router-link>
+
+
 
           <!-- Panier avec dropdown -->
           <div class="relative" @mouseenter="showCart = true" @mouseleave="showCart = false">
@@ -88,30 +104,52 @@
 
     <!-- Menu mobile -->
     <div v-if="isOpen" class="md:hidden px-2 pt-2 pb-3 space-y-1 bg-gray-50">
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <a href="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="home" />
         <span>Accueil</span>
       </a>
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+
+      <a href="/produits" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="box-open" />
         <span>Nos produits</span>
       </a>
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+
+      <a href="/a-propos" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="info-circle" />
         <span>À propos</span>
       </a>
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+
+      <a href="/contact" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="envelope" />
         <span>Contact</span>
       </a>
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+
+      <a href="/account" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="user" />
         <span>Mon compte</span>
       </a>
-      <a href="#" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+
+      <a href="/connexion" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+        <font-awesome-icon icon="sign-in-alt" />
+        <span>Connexion</span>
+      </a>
+
+      <a href="/inscription" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+        <font-awesome-icon icon="user-plus" />
+        <span>Inscription</span>
+      </a>
+
+      <a href="" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="shopping-cart" />
         <span>Panier</span>
       </a>
+
+      <a href="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+        <font-awesome-icon icon="right-from-bracket
+" />
+        <span>Déconnexion</span>
+      </a>
+
     </div>
   </nav>
 </template>
