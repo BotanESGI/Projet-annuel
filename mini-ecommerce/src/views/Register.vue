@@ -112,7 +112,8 @@ const inscription = async () => {
 
   try {
     error.value = ''
-    const response = await axios.post('https://api.exemple.com/register', {
+
+    const response = await axios.post('/api/register', {
       nom: nom.value,
       email: email.value,
       password: password.value
