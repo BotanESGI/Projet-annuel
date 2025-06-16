@@ -7,9 +7,11 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./backend/src:/var/www/html
-    expose:
-      - "80"
+      - ./backend:/var/www/html
+    environment:
+      APP_ENV: dev
+    depends_on:
+      - db
 
   db:
     image: mysql:5.7

@@ -16,8 +16,8 @@
       <div v-if="!loading && produits.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <div v-for="produit in produits" :key="produit.id" class="border p-4 rounded shadow hover:shadow-md transition">
           <img :src="produit.image" :alt="produit.nom" class="w-full h-48 object-cover mb-4 rounded" />
-          <h3 class="text-lg font-semibold mb-2">{{ produit.nom }}</h3>
-          <p class="text-gray-600 mb-2">{{ produit.description }}</p>
+          <h3 class="text-lg font-semibold mb-2 truncate text-gray-900">{{ produit.nom }}</h3>
+          <p class="text-gray-600 mb-2 truncate" :title="produit.description">{{ produit.description }}</p>
           <p class="text-blue-600 font-bold">{{ produit.prix }} €</p>
         </div>
       </div>
