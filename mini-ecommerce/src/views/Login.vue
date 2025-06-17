@@ -109,20 +109,21 @@ const connexion = async () => {
   success.value = ''
   try {
     isLoading.value = true
-    const response = await axios.post('/api/login', {
-      email: email.value,
+    const response = await axios.post('/api/login_check', {
+      username: email.value,
       password: password.value,
       remember: rememberMe.value
     })
+
     localStorage.setItem('token', response.data.token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+
     window.dispatchEvent(new Event('auth-changed'))
     success.value = 'Connexion réussie ! Redirection...'
     setTimeout(() => {
       router.push('/')
     }, 2000)
   } catch (err) {
-    error.value = err.response?.data?.error || 'Email ou mot de passe incorrect'
+    error.value = err.response?.data?.detail || err.response?.data?.error || 'Email ou mot de passe incorrect'
     console.error(err)
   } finally {
     isLoading.value = false
