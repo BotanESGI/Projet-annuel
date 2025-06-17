@@ -30,18 +30,29 @@ const routes = [
     {
         path: '/connexion',
         name: 'Login',
-        component: Login
+        component: Login,
+        meta: { guestOnly: true }
     },
     {
         path: '/inscription',
         name: 'Register',
-        component: Register
+        component: Register,
+        meta: { guestOnly: true }
     },
 ]
 
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+router.beforeEach((to, from, next) => {
+    const isAuthenticated = !!localStorage.getItem('token')
+    if (to.meta.guestOnly && isAuthenticated) {
+        next({ path: '/' })
+    } else {
+        next()
+    }
 })
 
 export default router
