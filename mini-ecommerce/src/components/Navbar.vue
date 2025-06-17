@@ -29,22 +29,22 @@
             <span>Contact</span>
           </router-link>
 
-          <router-link to="/compte" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="isAuthenticated" to="/compte" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user" />
             <span>Mon compte</span>
           </router-link>
 
-          <router-link to="/connexion" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="!isAuthenticated" to="/connexion" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="right-to-bracket" />
             <span>Connexion</span>
           </router-link>
 
-          <router-link to="/inscription" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="!isAuthenticated" to="/inscription" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user-plus" />
             <span>Inscription</span>
           </router-link>
 
-          <router-link to="/" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="isAuthenticated"  to="/"  @click.prevent="logout" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="right-from-bracket" />
             <span>Déconnexion</span>
           </router-link>
@@ -104,59 +104,72 @@
 
     <!-- Menu mobile -->
     <div v-if="isOpen" class="md:hidden px-2 pt-2 pb-3 space-y-1 bg-gray-50">
-      <a href="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="home" />
         <span>Accueil</span>
-      </a>
-
-      <a href="/produits" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link to="/produits" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="box-open" />
         <span>Nos produits</span>
-      </a>
-
-      <a href="/a-propos" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link to="/a-propos" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="info-circle" />
         <span>À propos</span>
-      </a>
-
-      <a href="/contact" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link to="/contact" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="envelope" />
         <span>Contact</span>
-      </a>
-
-      <a href="/account" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link v-if="isAuthenticated" to="/compte" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="user" />
         <span>Mon compte</span>
-      </a>
-
-      <a href="/connexion" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
-        <font-awesome-icon icon="sign-in-alt" />
+      </router-link>
+      <router-link v-if="!isAuthenticated" to="/connexion" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+        <font-awesome-icon icon="right-to-bracket" />
         <span>Connexion</span>
-      </a>
-
-      <a href="/inscription" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link v-if="!isAuthenticated" to="/inscription" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="user-plus" />
         <span>Inscription</span>
-      </a>
-
-      <a href="" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      </router-link>
+      <router-link v-if="isAuthenticated"  to="/"  @click.prevent="logout" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+        <font-awesome-icon icon="right-from-bracket" />
+        <span>Déconnexion</span>
+      </router-link>
+      <router-link to="/panier" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="shopping-cart" />
         <span>Panier</span>
-      </a>
-
-      <a href="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
-        <font-awesome-icon icon="right-from-bracket
-" />
-        <span>Déconnexion</span>
-      </a>
-
+      </router-link>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const isOpen = ref(false)
 const showCart = ref(false)
+const isAuthenticated = ref(false)
+const router = useRouter()
+
+const checkAuth = () => {
+  isAuthenticated.value = !!localStorage.getItem('token')
+}
+
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  isAuthenticated.value = false
+  window.dispatchEvent(new Event('auth-changed')) // <-- Ajouté
+  router.push('/connexion')
+}
+
+onMounted(() => {
+  checkAuth()
+  window.addEventListener('auth-changed', checkAuth)
+})
+onUnmounted(() => {
+  window.removeEventListener('auth-changed', checkAuth)
+})
 </script>
