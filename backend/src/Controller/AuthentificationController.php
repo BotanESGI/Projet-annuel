@@ -15,12 +15,13 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[AsController]
 class AuthentificationController
 {
-    #[Route('/register', name: 'register_post', methods: ['POST'])]
+    #[Route('/api/register', name: 'register_post', methods: ['POST'])]
     public function register(
         Request $request,
         EntityManagerInterface $em,
@@ -93,46 +94,22 @@ class AuthentificationController
         }
     }
 
-    #[Route('/login', name: 'login_post', methods: ['POST'])]
-    public function login(
-        Request $request,
-        EntityManagerInterface $em,
-        UserPasswordHasherInterface $passwordHasher,
-        JWTTokenManagerInterface $jwtManager
-    ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['email'], $data['password'])) {
-            return new JsonResponse([
-                'error' => 'Email et mot de passe requis'
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $user = $em->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+    #[Route('/api/me', name: 'me_api_get', methods: ['GET'])]
+    public function me(#[CurrentUser] ?UserInterface $user): JsonResponse
+    {
         if (!$user) {
-            return new JsonResponse([
-                'error' => 'Email ou mot de passe incorrect'
-            ], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
-
-        if (!$passwordHasher->isPasswordValid($user, $data['password'])) {
-            return new JsonResponse([
-                'error' => 'Email ou mot de passe incorrect'
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $token = $jwtManager->create($user);
 
         return new JsonResponse([
-            'message' => 'Connexion réussie',
-            'token' => $token,
             'user' => [
-                'id' => $user->getId(),
                 'email' => $user->getEmail(),
                 'nom' => $user->getName(),
                 'lastname' => $user->getLastname(),
-                'isVerified' => $user->getIsVerified()
+                'isVerified' => $user->getIsVerified(),
+                'roles' => $user->getRoles()
             ]
         ]);
     }
+
 }

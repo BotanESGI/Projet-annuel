@@ -1,10 +1,14 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Si le fichier ou dossier demandé existe, ne rien faire
+    # Passer le header Authorization à PHP
+    # Enfin g galeré avec se ptn de JWT ça m'a pris la journee
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
+
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
-    # Sinon, rediriger vers index.php (Symfony front controller)
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
