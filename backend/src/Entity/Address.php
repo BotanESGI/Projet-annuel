@@ -33,6 +33,9 @@ class Address
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $isDefault = false;
+
     public function __construct() {
 
     }
@@ -83,6 +86,17 @@ class Address
     public function setUser(?User $user): static
     {
         $this->user = $user;
+        return $this;
+    }
+
+    public function isDefault(): bool
+    {
+        return $this->isDefault;
+    }
+
+    public function setIsDefault(bool $isDefault): self
+    {
+        $this->isDefault = $isDefault;
         return $this;
     }
 }

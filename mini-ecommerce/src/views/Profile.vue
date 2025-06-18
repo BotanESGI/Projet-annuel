@@ -1,66 +1,94 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl w-full space-y-8">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
       <h2 class="text-center text-3xl font-extrabold text-gray-900">Mon compte</h2>
       <AlertMessage :message="success" type="success" />
       <AlertMessage :message="error" type="error" />
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
-          <div class="flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-700">Profil</h3>
-            <p class="text-gray-600 mb-4">Modifier vos informations personnelles et votre mot de passe</p>
-            <router-link
-                to="/profile"
-                class="w-full block py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
-            >
-              Gérer mon profil
-            </router-link>
+      <form class="mt-8 space-y-6" @submit.prevent="mettreAJourCompte">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nom</label>
+            <input
+                v-model="nom"
+                type="text"
+                required
+                :disabled="isLoading"
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Prénom</label>
+            <input
+                v-model="lastname"
+                type="text"
+                required
+                :disabled="isLoading"
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <input
+                v-model="email"
+                type="email"
+                readonly
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 bg-gray-100 cursor-not-allowed focus:outline-none sm:text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+            <input
+                v-model="password"
+                type="password"
+                :disabled="isLoading"
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+            <p class="text-sm text-gray-500">Laissez vide pour ne pas modifier</p>
           </div>
         </div>
+        <button
+            type="submit"
+            :disabled="isLoading"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          {{ isLoading ? 'Chargement...' : 'Mettre à jour' }}
+        </button>
 
-        <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
-          <div class="flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+        <!-- Ajouter après le bouton de mise à jour, à l'intérieur du formulaire -->
+        <div class="mt-8 border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer mon compte</h3>
+          <div class="space-y-4">
+            <div>
+              <button
+                  type="button"
+                  @click="deleteAccount('soft')"
+                  :disabled="isLoading"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Supprimer mon compte (SOFT)
+              </button>
+              <p class="text-xs text-gray-500 mt-1">Votre compte sera supprimé mais vos données seront conservées.</p>
             </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-700">Adresses</h3>
-            <p class="text-gray-600 mb-4">Gérer vos adresses de livraison et de facturation</p>
-            <router-link
-                to="/addresses"
-                class="w-full block py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-center"
-            >
-              Gérer mes adresses
-            </router-link>
+            <div>
+              <button
+                  type="button"
+                  @click="deleteAccount('hard')"
+                  :disabled="isLoading"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Supprimer mon compte (HARD)
+              </button>
+              <p class="text-xs text-gray-500 mt-1">Cette action supprimera toutes vos données.</p>
+            </div>
           </div>
         </div>
-
-        <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
-          <div class="flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-700">Commandes</h3>
-            <p class="text-gray-600 mb-4">Consultez vos commandes passées et leur statut</p>
-            <router-link
-                to="/orders"
-                class="w-full block py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 text-center"
-            >
-              Voir mes commandes
-            </router-link>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
@@ -70,25 +98,110 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import AlertMessage from '@/components/AlertMessage.vue'
 
+const nom = ref('')
+const lastname = ref('')
+const email = ref('')
+const password = ref('')
 const success = ref('')
 const error = ref('')
+const isLoading = ref(true)
 
-onMounted(() => {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    router.push('/login')
-  }
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token');
 
-  const urlParams = new URLSearchParams(window.location.search)
-  const successParam = urlParams.get('success')
-  if (successParam) {
-    success.value = decodeURIComponent(successParam)
+    const res = await axios.get('/api/account', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    nom.value = res.data.user.nom
+    lastname.value = res.data.user.lastname
+    email.value = res.data.user.email
+  } catch (err) {
+    console.error("Erreur:", err.response?.data)
+    error.value = "Impossible de charger les informations."
+  } finally {
+    isLoading.value = false
   }
 })
+
+const mettreAJourCompte = async () => {
+  if (isLoading.value) return
+
+  success.value = ''
+  error.value = ''
+  isLoading.value = true
+
+  try {
+    const data = {
+      nom: nom.value,
+      lastname: lastname.value
+    }
+    if (password.value) data.password = password.value
+
+    const res = await axios.put('/api/account', data, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+    success.value = 'Informations mises à jour !'
+    password.value = ''
+    localStorage.setItem('user', JSON.stringify(res.data.user))
+    window.dispatchEvent(new Event('auth-changed'))
+  } catch (err) {
+    error.value = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).join(', ')
+        : "Erreur lors de la mise à jour."
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const deleteAccount = async (type) => {
+  if (isLoading.value) return
+
+  const confirmMessage = "Pour confirmer la suppression définitive de votre compte, veuillez taper 'SUPPRIMER'";
+
+  const confirmation = prompt(confirmMessage);
+  if (confirmation !== 'SUPPRIMER') {
+    if (confirmation !== null) {
+      error.value = "Confirmation incorrecte. Votre compte n'a pas été supprimé.";
+    }
+    return;
+  }
+
+  success.value = '';
+  error.value = '';
+  isLoading.value = true;
+
+  try {
+    await axios.delete(`/api/account/delete/${type}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth-changed'));
+
+    window.location.href = '/';
+  } catch (err) {
+    error.value = err.response?.data?.errors?.general || `Erreur lors de la ${type === 'soft' ? 'désactivation' : 'suppression'} du compte.`;
+    isLoading.value = false;
+  }
+}
 </script>
 
 <style scoped>
-.transition-shadow {
-  transition: box-shadow 0.3s ease;
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
