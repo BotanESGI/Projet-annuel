@@ -2,10 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Product from '../views/Product.vue'
 import About from '../views/About.vue'
 import Contact from '../views/Contact.vue'
-import Profile from '../views/Account.vue'
-import Account from '../views/Profile.vue'
+import Account from '../views/Account.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import Profile from '../views/Profile.vue'
+import Addresses from '../views/Addresses.vue'
+import Orders from '../views/Orders.vue'
 
 const routes = [
     {
@@ -36,6 +38,18 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/addresses',
+        name: 'Addresses',
+        component: Addresses,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/orders',
+        name: 'Orders',
+        component: Orders,
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/login',
         name: 'Login',
         component: Login,
@@ -46,7 +60,7 @@ const routes = [
         name: 'Register',
         component: Register,
         meta: { guestOnly: true }
-    },
+    }
 ]
 
 const router = createRouter({
