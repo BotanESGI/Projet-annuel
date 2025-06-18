@@ -83,6 +83,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Orders::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private Collection $orders;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $isDeleted = false;
+
+
     public function __construct()
     {
         $this->reviews = new ArrayCollection();
@@ -326,6 +330,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): self
     {
         $this->isVerified = $isVerified;
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): self
+    {
+        $this->isDeleted = $isDeleted;
         return $this;
     }
 }

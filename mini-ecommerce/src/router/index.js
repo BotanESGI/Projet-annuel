@@ -2,18 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Product from '../views/Product.vue'
 import About from '../views/About.vue'
 import Contact from '../views/Contact.vue'
-import Account from '../views/Account.vue'
+import Profile from '../views/Account.vue'
+import Account from '../views/Profile.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 
 const routes = [
     {
-        path: '/produits',
+        path: '/products',
         name: 'Produits',
         component: Product
     },
     {
-        path: '/a-propos',
+        path: '/about',
         name: 'APropos',
         component: About
     },
@@ -23,18 +24,25 @@ const routes = [
         component: Contact
     },
     {
-        path: '/compte',
+        path: '/account',
         name: 'Compte',
-        component: Account
+        component: Account,
+        meta: { requiresAuth: true }
     },
     {
-        path: '/connexion',
+        path: '/profile',
+        name: 'Profile',
+        component: Profile,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/login',
         name: 'Login',
         component: Login,
         meta: { guestOnly: true }
     },
     {
-        path: '/inscription',
+        path: '/register',
         name: 'Register',
         component: Register,
         meta: { guestOnly: true }
@@ -48,9 +56,15 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const isAuthenticated = !!localStorage.getItem('token')
+
     if (to.meta.guestOnly && isAuthenticated) {
         next({ path: '/' })
-    } else {
+    }
+
+    else if (to.meta.requiresAuth && !isAuthenticated) {
+        next({ path: '/login' })
+    }
+    else {
         next()
     }
 })

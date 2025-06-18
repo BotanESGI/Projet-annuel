@@ -113,7 +113,7 @@
 
         <div class="text-center">
           <router-link
-              to="/connexion"
+              to="/login"
               class="font-medium text-blue-600 hover:text-blue-500"
               :class="{ 'pointer-events-none opacity-50': isLoading }"
           >
@@ -200,12 +200,10 @@ const inscription = async () => {
       password: password.value
     })
 
-    success.value = response.data.message || 'Inscription réussie'
-    localStorage.setItem('token', response.data.token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+    success.value = response.data.message || 'Inscription réussie ! Redirection...'
 
     setTimeout(() => {
-      router.push('/')
+      router.push('/login')
     }, 5000)
 
   } catch (err) {
