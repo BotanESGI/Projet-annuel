@@ -1,25 +1,23 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Security;
 
 use App\Entity\User;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsController]
-class AuthentificationController
+class AuthController
 {
     #[Route('/api/register', name: 'register_post', methods: ['POST'])]
     public function register(
@@ -71,7 +69,7 @@ class AuthentificationController
             $token = $jwtManager->create($user);
 
             return new JsonResponse([
-                'message' => 'Inscription réussie',
+                'message' => 'Inscription réussie ! Redirection...',
                 'token' => $token,
                 'user' => [
                     'id' => $user->getId(),
@@ -93,23 +91,4 @@ class AuthentificationController
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
-    #[Route('/api/me', name: 'me_api_get', methods: ['GET'])]
-    public function me(#[CurrentUser] ?UserInterface $user): JsonResponse
-    {
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        return new JsonResponse([
-            'user' => [
-                'email' => $user->getEmail(),
-                'nom' => $user->getName(),
-                'lastname' => $user->getLastname(),
-                'isVerified' => $user->getIsVerified(),
-                'roles' => $user->getRoles()
-            ]
-        ]);
-    }
-
 }

@@ -14,12 +14,12 @@
             <span>Accueil</span>
           </router-link>
 
-          <router-link to="/produits" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/products" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="box-open" />
             <span>Nos produits</span>
           </router-link>
 
-          <router-link to="/a-propos" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link to="/about" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="info-circle" />
             <span>À propos</span>
           </router-link>
@@ -29,17 +29,17 @@
             <span>Contact</span>
           </router-link>
 
-          <router-link v-if="isAuthenticated" to="/compte" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="isAuthenticated" to="/account" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user" />
             <span>Mon compte</span>
           </router-link>
 
-          <router-link v-if="!isAuthenticated" to="/connexion" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="!isAuthenticated" to="/login" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="right-to-bracket" />
             <span>Connexion</span>
           </router-link>
 
-          <router-link v-if="!isAuthenticated" to="/inscription" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="!isAuthenticated" to="/register" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user-plus" />
             <span>Inscription</span>
           </router-link>
@@ -108,11 +108,11 @@
         <font-awesome-icon icon="home" />
         <span>Accueil</span>
       </router-link>
-      <router-link to="/produits" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/products" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="box-open" />
         <span>Nos produits</span>
       </router-link>
-      <router-link to="/a-propos" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/about" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="info-circle" />
         <span>À propos</span>
       </router-link>
@@ -120,15 +120,15 @@
         <font-awesome-icon icon="envelope" />
         <span>Contact</span>
       </router-link>
-      <router-link v-if="isAuthenticated" to="/compte" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="isAuthenticated" to="/account" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="user" />
         <span>Mon compte</span>
       </router-link>
-      <router-link v-if="!isAuthenticated" to="/connexion" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="!isAuthenticated" to="/login" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="right-to-bracket" />
         <span>Connexion</span>
       </router-link>
-      <router-link v-if="!isAuthenticated" to="/inscription" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="!isAuthenticated" to="/register" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="user-plus" />
         <span>Inscription</span>
       </router-link>
@@ -161,8 +161,8 @@ const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   isAuthenticated.value = false
-  window.dispatchEvent(new Event('auth-changed')) // <-- Ajouté
-  router.push('/connexion')
+  window.dispatchEvent(new Event('auth-changed'))
+  router.push('/login')
 }
 
 onMounted(() => {

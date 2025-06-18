@@ -31,9 +31,8 @@
             <input
                 v-model="email"
                 type="email"
-                required
-                :disabled="isLoading"
-                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                readonly
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 bg-gray-100 cursor-not-allowed focus:outline-none sm:text-sm"
             />
           </div>
           <div>
@@ -60,6 +59,35 @@
           </span>
           {{ isLoading ? 'Chargement...' : 'Mettre à jour' }}
         </button>
+
+        <!-- Ajouter après le bouton de mise à jour, à l'intérieur du formulaire -->
+        <div class="mt-8 border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer mon compte</h3>
+          <div class="space-y-4">
+            <div>
+              <button
+                  type="button"
+                  @click="deleteAccount('soft')"
+                  :disabled="isLoading"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Supprimer mon compte (SOFT)
+              </button>
+              <p class="text-xs text-gray-500 mt-1">Votre compte sera supprimé mais vos données seront conservées.</p>
+            </div>
+            <div>
+              <button
+                  type="button"
+                  @click="deleteAccount('hard')"
+                  :disabled="isLoading"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Supprimer mon compte (HARD)
+              </button>
+              <p class="text-xs text-gray-500 mt-1">Cette action supprimera toutes vos données.</p>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -82,7 +110,7 @@ onMounted(async () => {
   try {
     const token = localStorage.getItem('token');
 
-    const res = await axios.get('/api/me', {
+    const res = await axios.get('/api/account', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -109,12 +137,11 @@ const mettreAJourCompte = async () => {
   try {
     const data = {
       nom: nom.value,
-      lastname: lastname.value,
-      email: email.value
+      lastname: lastname.value
     }
     if (password.value) data.password = password.value
 
-    const res = await axios.put('/api/me', data, {
+    const res = await axios.put('/api/account', data, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     success.value = 'Informations mises à jour !'
@@ -127,6 +154,39 @@ const mettreAJourCompte = async () => {
         : "Erreur lors de la mise à jour."
   } finally {
     isLoading.value = false
+  }
+}
+
+const deleteAccount = async (type) => {
+  if (isLoading.value) return
+
+  const confirmMessage = "Pour confirmer la suppression définitive de votre compte, veuillez taper 'SUPPRIMER'";
+
+  const confirmation = prompt(confirmMessage);
+  if (confirmation !== 'SUPPRIMER') {
+    if (confirmation !== null) {
+      error.value = "Confirmation incorrecte. Votre compte n'a pas été supprimé.";
+    }
+    return;
+  }
+
+  success.value = '';
+  error.value = '';
+  isLoading.value = true;
+
+  try {
+    await axios.delete(`/api/account/delete/${type}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth-changed'));
+
+    window.location.href = '/';
+  } catch (err) {
+    error.value = err.response?.data?.errors?.general || `Erreur lors de la ${type === 'soft' ? 'désactivation' : 'suppression'} du compte.`;
+    isLoading.value = false;
   }
 }
 </script>

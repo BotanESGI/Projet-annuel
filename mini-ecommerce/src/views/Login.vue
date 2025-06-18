@@ -80,7 +80,7 @@
         </div>
 
         <div class="text-center">
-          <router-link to="/inscription" class="font-medium text-blue-600 hover:text-blue-500" :class="{ 'pointer-events-none opacity-50': isLoading }">
+          <router-link to="/register" class="font-medium text-blue-600 hover:text-blue-500" :class="{ 'pointer-events-none opacity-50': isLoading }">
             Pas encore de compte ? S'inscrire
           </router-link>
         </div>
@@ -123,7 +123,7 @@ const connexion = async () => {
       router.push('/')
     }, 2000)
   } catch (err) {
-    error.value = err.response?.data?.detail || err.response?.data?.error || 'Email ou mot de passe incorrect'
+    error.value = 'Email ou mot de passe incorrect'
     console.error(err)
   } finally {
     isLoading.value = false
