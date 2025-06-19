@@ -8,6 +8,8 @@ import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Addresses from '../views/Addresses.vue'
 import Orders from '../views/Orders.vue'
+import ForgetPassword from '../views/ForgetPassword.vue'
+import ResetPassword from '../views/ResetPassword.vue'
 
 const routes = [
     {
@@ -39,28 +41,41 @@ const routes = [
     },
     {
         path: '/addresses',
-        name: 'Addresses',
+        name: 'Adresses',
         component: Addresses,
         meta: { requiresAuth: true }
     },
     {
         path: '/orders',
-        name: 'Orders',
+        name: 'Commandes',
         component: Orders,
         meta: { requiresAuth: true }
     },
     {
         path: '/login',
-        name: 'Login',
+        name: 'Connexion',
         component: Login,
         meta: { guestOnly: true }
     },
     {
         path: '/register',
-        name: 'Register',
+        name: 'Inscription',
         component: Register,
         meta: { guestOnly: true }
-    }
+    },
+    {
+        path: '/forget-password',
+        name: 'Mot de passe oublié',
+        component: ForgetPassword,
+        meta: { guestOnly: true }
+    },
+    {
+        path: '/reset-password/:token',
+        name: 'Réinitialisation du mot de passe',
+        component: ResetPassword,
+        props: true,
+        meta: { guestOnly: true }
+    },
 ]
 
 const router = createRouter({

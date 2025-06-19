@@ -1,4 +1,3 @@
-
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
@@ -20,6 +19,7 @@
                 v-model="nom"
                 name="nom"
                 type="text"
+                minlength="3"
                 required
                 :disabled="isLoading"
                 class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -36,6 +36,7 @@
                 v-model="lastname"
                 name="lastname"
                 type="text"
+                minlength="3"
                 required
                 :disabled="isLoading"
                 class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -73,9 +74,16 @@
                 class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Choisissez un mot de passe"
             />
-            <p class="mt-1 text-sm text-gray-500">
-              Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.
-            </p>
+            <div v-if="password" class="mt-2">
+              <div class="flex space-x-1">
+                <div v-for="(level, index) in 4" :key="index"
+                     class="h-1.5 w-1/4 rounded-full transition-colors"
+                     :class="getPasswordStrengthColor(index)"></div>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">
+                Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.
+              </p>
+            </div>
           </div>
 
           <div>
@@ -141,9 +149,63 @@ const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
 
+const getPasswordStrength = (password) => {
+  let strength = 0
+  if (password.length >= 8) strength++
+  if (/[A-Z]/.test(password)) strength++
+  if (/[a-z]/.test(password)) strength++
+  if (/[0-9]/.test(password)) strength++
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength++
+  return Math.min(4, strength)
+}
+
+const getPasswordStrengthColor = (index) => {
+  const strength = getPasswordStrength(password.value)
+  if (index >= strength) return 'bg-gray-200'
+
+  if (strength === 1) return 'bg-red-500'
+  if (strength === 2) return 'bg-orange-500'
+  if (strength === 3) return 'bg-yellow-500'
+  return 'bg-green-500'
+}
+
+const validerMotDePasse = (mdp) => {
+  if (mdp.length < 8) {
+    return 'Le mot de passe doit contenir au moins 8 caractères'
+  }
+
+  if (!/[A-Z]/.test(mdp)) {
+    return 'Le mot de passe doit contenir au moins une lettre majuscule'
+  }
+
+  if (!/[a-z]/.test(mdp)) {
+    return 'Le mot de passe doit contenir au moins une lettre minuscule'
+  }
+
+  if (!/[0-9]/.test(mdp)) {
+    return 'Le mot de passe doit contenir au moins un chiffre'
+  }
+
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(mdp)) {
+    return 'Le mot de passe doit contenir au moins un caractère spécial'
+  }
+
+  return null
+}
+
 const validateForm = () => {
   if (!email.value || !password.value || !nom.value || !lastname.value) {
     error.value = 'Tous les champs sont obligatoires'
+    return false
+  }
+
+  if (nom.value.length < 3) {
+    error.value = 'Le nom doit contenir au moins 3 caractères'
+    return false
+  }
+
+  if (lastname.value.length < 3) {
+    error.value = 'Le prénom doit contenir au moins 3 caractères'
     return false
   }
 
@@ -152,30 +214,9 @@ const validateForm = () => {
     return false
   }
 
-  // Validation du mot de passe
-  const passwordRegex = {
-    minLength: /.{8,}/,
-    uppercase: /[A-Z]/,
-    number: /[0-9]/,
-    special: /[\W_]/
-  }
-
-  const passwordErrors = []
-  if (!passwordRegex.minLength.test(password.value)) {
-    passwordErrors.push('Le mot de passe doit contenir au moins 8 caractères')
-  }
-  if (!passwordRegex.uppercase.test(password.value)) {
-    passwordErrors.push('Le mot de passe doit contenir au moins une majuscule')
-  }
-  if (!passwordRegex.number.test(password.value)) {
-    passwordErrors.push('Le mot de passe doit contenir au moins un chiffre')
-  }
-  if (!passwordRegex.special.test(password.value)) {
-    passwordErrors.push('Le mot de passe doit contenir au moins un caractère spécial')
-  }
-
-  if (passwordErrors.length > 0) {
-    error.value = passwordErrors.join('\n')
+  const erreurValidation = validerMotDePasse(password.value)
+  if (erreurValidation) {
+    error.value = erreurValidation
     return false
   }
 
