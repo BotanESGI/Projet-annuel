@@ -6,19 +6,27 @@ use App\Entity\User;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsController]
-class AuthController
+class AuthController extends AbstractController
 {
+    private string $appUrl;
+
+    public function __construct(string $appUrl)
+    {
+        $this->appUrl = $appUrl;
+    }
+
     #[Route('/api/register', name: 'register_post', methods: ['POST'])]
     public function register(
         Request $request,
@@ -87,6 +95,118 @@ class AuthController
         } catch (\Throwable $e) {
             return new JsonResponse([
                 'error' => 'Une erreur est survenue lors de l\'inscription',
+                'details' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/reset-password', name: 'reset_password_request', methods: ['POST'])]
+    public function requestPasswordReset(
+        Request $request,
+        EntityManagerInterface $em,
+        MailerInterface $mailer
+    ): JsonResponse {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['email'])) {
+                return new JsonResponse([
+                    'error' => 'Adresse email manquante'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $user = $em->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+
+            if (!$user) {
+                return new JsonResponse([
+                    'message' => 'Si un compte existe avec cette adresse, un email de réinitialisation a été envoyé'
+                ]);
+            }
+
+            $resetToken = bin2hex(random_bytes(32));
+            $user->setResetToken($resetToken);
+
+            $em->flush();
+
+            $resetUrl = $this->appUrl . '/reset-password/' . $resetToken;
+
+            $email = (new Email())
+                ->from('noreply@mini-ecommerce.com')
+                ->to($user->getEmail())
+                ->subject('Réinitialisation de votre mot de passe')
+                ->html($this->renderView('emails/security/reset_password.html.twig', [
+                    'user' => $user,
+                    'resetUrl' => $resetUrl
+                ]));
+
+            $mailer->send($email);
+
+            return new JsonResponse([
+                'message' => 'Si un compte existe avec cette adresse, un email de réinitialisation a été envoyé'
+            ]);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'error' => 'Une erreur est survenue lors de la demande de réinitialisation',
+                'details' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/reset-password/verify/{token}', name: 'reset_password_verify', methods: ['GET'])]
+    public function verifyResetToken(
+        string $token,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $user = $em->getRepository(User::class)->findOneBy(['resetToken' => $token]);
+
+        if (!$user) {
+            return new JsonResponse([
+                'valid' => false,
+                'message' => 'Token invalide ou expiré'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse([
+            'valid' => true
+        ]);
+    }
+
+    #[Route('/api/reset-password/confirm', name: 'reset_password_confirm', methods: ['POST'])]
+    public function confirmPasswordReset(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['token'], $data['password'])) {
+                return new JsonResponse([
+                    'error' => 'Données manquantes'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $user = $em->getRepository(User::class)->findOneBy(['resetToken' => $data['token']]);
+
+            if (!$user) {
+                return new JsonResponse([
+                    'error' => 'Token invalide ou expiré'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
+            $user->setResetToken(null);
+
+            $em->flush();
+
+            return new JsonResponse([
+                'message' => 'Mot de passe réinitialisé avec succès'
+            ]);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'error' => 'Une erreur est survenue lors de la réinitialisation du mot de passe',
                 'details' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

@@ -5,10 +5,13 @@
       <AlertMessage :message="error" type="error" />
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Connexion à votre compte
+          Réinitialisation<br>Mot de passe
         </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Entrez votre adresse e-mail pour recevoir un lien de réinitialisation
+        </p>
       </div>
-      <form class="mt-8 space-y-6" @submit.prevent="connexion">
+      <form class="mt-8 space-y-6" @submit.prevent="demanderReinitialisation">
         <div class="rounded-md shadow-sm space-y-4">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">
@@ -25,42 +28,6 @@
                 placeholder="exemple@email.com"
             />
           </div>
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">
-              Mot de passe
-            </label>
-            <input
-                id="password"
-                v-model="password"
-                name="password"
-                type="password"
-                required
-                :disabled="isLoading"
-                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="Votre mot de passe"
-            />
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-                id="remember-me"
-                v-model="rememberMe"
-                name="remember-me"
-                type="checkbox"
-                :disabled="isLoading"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-              Se souvenir de moi
-            </label>
-          </div>
-          <div class="text-sm">
-            <a href="/forget-password" class="font-medium text-blue-600 hover:text-blue-500">
-              Mot de passe oublié ?
-            </a>
-          </div>
         </div>
 
         <div>
@@ -75,12 +42,15 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ isLoading ? 'Connexion en cours...' : 'Se connecter' }}
+            {{ isLoading ? 'Envoi en cours...' : 'Envoyer le lien' }}
           </button>
         </div>
 
-        <div class="text-center">
-          <router-link to="/register" class="font-medium text-blue-600 hover:text-blue-500" :class="{ 'pointer-events-none opacity-50': isLoading }">
+        <div class="text-center space-y-2">
+          <router-link to="/login" class="font-medium text-blue-600 hover:text-blue-500 block" :class="{ 'pointer-events-none opacity-50': isLoading }">
+            Retour à la page de connexion
+          </router-link>
+          <router-link to="/register" class="font-medium text-blue-600 hover:text-blue-500 block" :class="{ 'pointer-events-none opacity-50': isLoading }">
             Pas encore de compte ? S'inscrire
           </router-link>
         </div>
@@ -92,38 +62,37 @@
 <script setup>
 import AlertMessage from '@/components/AlertMessage.vue'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-const router = useRouter()
 const email = ref('')
-const password = ref('')
-const rememberMe = ref(false)
 const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
 
-const connexion = async () => {
+const demanderReinitialisation = async () => {
   if (isLoading.value) return
   error.value = ''
   success.value = ''
+
+  if (!email.value) {
+    error.value = 'Veuillez saisir votre adresse e-mail'
+    return
+  }
+
   try {
     isLoading.value = true
-    const response = await axios.post('/api/login_check', {
-      username: email.value,
-      password: password.value,
-      remember: rememberMe.value
+    await axios.post('/api/reset-password', {
+      email: email.value
     })
 
-    localStorage.setItem('token', response.data.token)
-
-    window.dispatchEvent(new Event('auth-changed'))
-    success.value = 'Connexion réussie ! Redirection...'
-    setTimeout(() => {
-      router.push('/')
-    }, 2000)
+    success.value = 'Si un compte existe avec cette adresse, un e-mail avec les instructions de réinitialisation a été envoyé à votre adresse'
+    email.value = ''
   } catch (err) {
-    error.value = 'Email ou mot de passe incorrect'
+    if (err.response && err.response.data && err.response.data.error) {
+      error.value = err.response.data.error
+    } else {
+      error.value = 'Une erreur est survenue lors de la demande de réinitialisation'
+    }
     console.error(err)
   } finally {
     isLoading.value = false
