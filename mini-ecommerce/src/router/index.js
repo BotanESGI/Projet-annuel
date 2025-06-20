@@ -10,6 +10,7 @@ import Addresses from '../views/Addresses.vue'
 import Orders from '../views/Orders.vue'
 import ForgetPassword from '../views/ForgetPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
+import AccountVerification from '../views/AccountVerification.vue'
 
 const routes = [
     {
@@ -73,6 +74,13 @@ const routes = [
         path: '/reset-password/:token',
         name: 'Réinitialisation du mot de passe',
         component: ResetPassword,
+        props: true,
+        meta: { guestOnly: true }
+    },
+    {
+        path: '/account-verification/:token',
+        name: 'Vérification du compte',
+        component: AccountVerification,
         props: true,
         meta: { guestOnly: true }
     },

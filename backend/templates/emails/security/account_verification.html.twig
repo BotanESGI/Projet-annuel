@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réinitialisation de mot de passe</title>
+    <title>Vérification de votre compte</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,21 +70,21 @@
 </head>
 <body>
 <div class="container">
-    <h2>Réinitialisation<br>Mot de passe</h2>
-    <p class="description">Voici votre lien pour réinitialiser votre mot de passe</p>
+    <h2>Vérification<br>de votre compte</h2>
+    <p class="description">Bienvenue sur Mini E-commerce !</p>
 
     <p>Bonjour <strong>{{ user.name }} {{ user.lastname }}</strong>,</p>
 
-    <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte. Pour procéder à la réinitialisation, veuillez cliquer sur le bouton ci-dessous :</p>
+    <p>Merci de vous être inscrit sur notre plateforme. Pour activer votre compte et accéder à tous nos services, veuillez cliquer sur le bouton ci-dessous :</p>
 
-    <a href="{{ resetUrl }}" class="btn">Réinitialiser mon mot de passe</a>
+    <a href="{{ verificationUrl }}" class="btn">Vérifier mon compte</a>
 
     <p>Si le bouton ne fonctionne pas, copiez et collez l'URL suivante dans votre navigateur :</p>
-    <div class="link-text">{{ resetUrl }}</div>
+    <div class="link-text">{{ verificationUrl }}</div>
 
     <p>Ce lien expirera dans 24 heures pour des raisons de sécurité.</p>
 
-    <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>
+    <p>Si vous n'avez pas créé de compte sur notre plateforme, vous pouvez ignorer cet email.</p>
 
     <div class="footer">
         <p>&copy; 2025 Mini E-commerce. Tous droits réservés.</p>

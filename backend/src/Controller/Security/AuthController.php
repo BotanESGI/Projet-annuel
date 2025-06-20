@@ -33,7 +33,8 @@ class AuthController extends AbstractController
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
-        JWTTokenManagerInterface $jwtManager
+        JWTTokenManagerInterface $jwtManager,
+        MailerInterface $mailer
     ): JsonResponse {
         try {
             $data = json_decode($request->getContent(), true);
@@ -73,11 +74,25 @@ class AuthController extends AbstractController
             $em->persist($user);
             $em->flush();
 
+            // Envoi de l'email de vérification
+            $verificationUrl = $this->appUrl . '/account-verification/' . $user->getConfirmationToken();
+
+            $email = (new Email())
+                ->from('noreply@mini-ecommerce.com')
+                ->to($user->getEmail())
+                ->subject('Vérification de votre compte')
+                ->html($this->renderView('emails/security/account_verification.html.twig', [
+                    'user' => $user,
+                    'verificationUrl' => $verificationUrl
+                ]));
+
+            $mailer->send($email);
+
             // Génération du token JWT
             $token = $jwtManager->create($user);
 
             return new JsonResponse([
-                'message' => 'Inscription réussie ! Redirection...',
+                'message' => 'Inscription réussie ! Veuillez vérifier votre boîte mail pour activer votre compte.',
                 'token' => $token,
                 'user' => [
                     'id' => $user->getId(),
@@ -98,6 +113,30 @@ class AuthController extends AbstractController
                 'details' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/api/verify-email/{token}', name: 'verify_email', methods: ['GET'])]
+    public function verifyEmail(
+        string $token,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $user = $em->getRepository(User::class)->findOneBy(['confirmationToken' => $token]);
+
+        if (!$user) {
+            return new JsonResponse([
+                'valid' => false,
+                'message' => 'Token de vérification invalide ou expiré'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user->setIsVerified(true);
+        $user->setConfirmationToken(null);
+        $em->flush();
+
+        return new JsonResponse([
+            'valid' => true,
+            'message' => 'Votre compte a été vérifié avec succès'
+        ]);
     }
 
     #[Route('/api/reset-password', name: 'reset_password_request', methods: ['POST'])]

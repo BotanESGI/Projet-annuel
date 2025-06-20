@@ -243,10 +243,6 @@ const inscription = async () => {
 
     success.value = response.data.message || 'Inscription réussie ! Redirection...'
 
-    setTimeout(() => {
-      router.push('/login')
-    }, 5000)
-
   } catch (err) {
     if (err.response) {
       if (err.response.data.errors) {
