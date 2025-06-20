@@ -123,8 +123,11 @@ const connexion = async () => {
       router.push('/')
     }, 2000)
   } catch (err) {
-    error.value = 'Email ou mot de passe incorrect'
-    console.error(err)
+    if (err.response?.data?.message === "Votre compte n'est pas encore vérifié.") {
+      error.value = "Votre compte n'est pas encore vérifié. Veuillez vérifier vos emails pour activer votre compte."
+    } else {
+      error.value = 'Email ou mot de passe incorrect'
+    }
   } finally {
     isLoading.value = false
   }
