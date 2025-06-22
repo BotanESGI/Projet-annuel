@@ -510,6 +510,7 @@ class AppFixtures extends Fixture
         }
 
 
+        /** @var TYPE_NAME $productsData */
         foreach ($productsData as $data) {
             if ($data['type'] === 'PHYSICAL') {
                 $product = new PhysicalProduct($categories[array_search($data['default_category'], $categoryNames)]);
@@ -525,6 +526,13 @@ class AppFixtures extends Fixture
             $product->setDescription($data['description']);
             $product->setPrice($data['price']);
             $product->setImage($data['image']);
+
+            $randomDays = rand(0, 30);
+            $randomHours = rand(0, 23);
+            $randomMinutes = rand(0, 59);
+            $createdAt = new \DateTime();
+            $createdAt->modify("-$randomDays days -$randomHours hours -$randomMinutes minutes");
+            $product->setCreatedAt($createdAt);
 
             // Ajout de la catégorie ou les catégories
             $categoriesArray = is_array($data['category']) ? $data['category'] : [$data['category']];

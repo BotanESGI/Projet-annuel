@@ -2,20 +2,58 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\State\ReviewStateProcessor;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\ReviewStatusEnum;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
+#[ApiResource(
+    operations: [
+        new Get(
+            normalizationContext: ['groups' => ['review:read']],
+            security: "is_granted('READ', object)"
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['review:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new Post(
+            normalizationContext: ['groups' => ['review:read']],
+            denormalizationContext: ['groups' => ['review:write']],
+            security: "is_granted('ROLE_USER')",
+            processor: ReviewStateProcessor::class
+        ),
+        new Put(
+            normalizationContext: ['groups' => ['review:read']],
+            denormalizationContext: ['groups' => ['review:write']],
+            security: "is_granted('EDIT', object)"
+        ),
+        new Delete(
+            security: "is_granted('DELETE', object)"
+        )
+    ],
+    normalizationContext: ['groups' => ['review:read']],
+    denormalizationContext: ['groups' => ['review:write']]
+)]
 class Review
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['review:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'text')]
     #[Assert\NotBlank(message: "Le contenu ne doit pas être vide.")]
+    #[Groups(['review:read', 'review:write'])]
     private ?string $content = null;
 
     #[ORM\Column]
@@ -25,24 +63,29 @@ class Review
         max: 5,
         notInRangeMessage: 'La note doit être comprise entre {{ min }} et {{ max }}.'
     )]
+    #[Groups(['review:read', 'review:write'])]
     private ?int $rating = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\NotBlank(message: "L'utilisateur ne doit pas être vide.")]
+    #[Groups(['review:read'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotBlank(message: "Le produit ne doit pas être vide.")]
+    #[Groups(['review:read', 'review:write'])]
     private ?Product $product = null;
 
     #[ORM\Column(enumType: ReviewStatusEnum::class)]
     #[Assert\NotBlank(message: "Le status ne doit pas être vide.")]
+    #[Groups(['review:read'])]
     private ?ReviewStatusEnum $status = null;
 
     #[ORM\Column(type: 'datetime')]
     #[Assert\NotBlank(message: "La date de publication ne doit pas être vide.")]
+    #[Groups(['review:read'])]
     private ?\DateTimeInterface $datePublication = null;
 
     public function getId(): ?int
