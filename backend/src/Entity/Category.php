@@ -2,20 +2,37 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+    operations: [
+        new Get(
+            normalizationContext: ['groups' => ['category:read', 'category:item:read']]
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['category:read']]
+        )
+    ],
+    normalizationContext: ['groups' => ['category:read']]
+)]
 #[ORM\Entity]
 class Category
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['category:read', 'product:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['category:read', 'product:read'])]
     #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
     #[Assert\Length(
         min: 3,
@@ -24,6 +41,7 @@ class Category
     private ?string $name = null;
 
     #[ORM\Column(length: 7, nullable: true)]
+    #[Groups(['category:read', 'product:read'])]
     #[Assert\NotBlank(message: "Le champ couleur ne doit pas être vide.")]
     #[Assert\Regex(
         pattern: '/^#([0-9A-F]{3}){1,2}$/i',

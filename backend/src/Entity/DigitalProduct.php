@@ -2,19 +2,27 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    shortName: 'DigitalProduct',
+    normalizationContext: ['groups' => ['product:read', 'digital_product:read']],
+    denormalizationContext: ['groups' => ['product:write', 'digital_product:write']]
+)]
 #[ORM\Entity]
 class DigitalProduct extends Product
 {
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "La lien de téléchargement ne doit pas être vide.")]
     #[Assert\Url(message: "Le lien de téléchargement doit être un URL valide.")]
+    #[Groups(['product:read', 'digital_product:read', 'digital_product:write'])]
     private ?string $downloadLink = null;
 
     #[ORM\Column(type: 'integer', nullable: true)]
     #[Assert\Positive(message: "La taille du fichier doit être positive.")]
+    #[Groups(['product:read', 'digital_product:read', 'digital_product:write'])]
     private ?int $filesize = null;
 
     #[ORM\Column(length: 50, nullable: true)]
@@ -104,6 +112,7 @@ class DigitalProduct extends Product
         ],
         message: "Le type de fichier '{{ value }}' n'est pas valide. Les types acceptés."
     )]
+    #[Groups(['product:read', 'digital_product:read', 'digital_product:write'])]
     private ?string $filetype = null;
 
     public function getDownloadLink(): ?string
