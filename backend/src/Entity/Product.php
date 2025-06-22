@@ -2,14 +2,47 @@
 
 namespace App\Entity;
 
-use DateTime;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
+use App\State\ProductProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-// Ajout pour les groupes de normalisation/dénormalisation
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+    operations: [
+        new Get(
+            normalizationContext: ['groups' => ['product:read', 'product:item:read']]
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['product:read']]
+        ),
+        new Post(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent créer des produits",
+            processor: ProductProcessor::class,
+            denormalizationContext: ['groups' => ['product:write']]
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent modifier des produits",
+            processor: ProductProcessor::class,
+            denormalizationContext: ['groups' => ['product:write']]
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent supprimer des produits"
+        )
+    ],
+    normalizationContext: ['groups' => ['product:read']],
+    denormalizationContext: ['groups' => ['product:write']]
+)]
 #[ORM\Entity]
 #[ORM\Table(name: 'product')]
 #[ORM\InheritanceType("JOINED")]

@@ -1,8 +1,11 @@
 api_platform:
-    title: Hello API Platform
-    version: 1.0.0
+    title: 'E-commerce API'
+    description: 'API pour notre plateforme e-commerce'
+    version: '1.0.0'
     formats:
         jsonld: ['application/ld+json']
+        json: ['application/json']
+        html: ['text/html']
     docs_formats:
         jsonld: ['application/ld+json']
         jsonopenapi: ['application/vnd.openapi+json']
@@ -11,8 +14,12 @@ api_platform:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
-        extra_properties:
-            standard_put: true
-            rfc_7807_compliant_errors: true
-    event_listeners_backward_compatibility_layer: false
-    keep_legacy_inflector: false
+        pagination_enabled: false
+    collection:
+        pagination:
+            enabled: false
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header

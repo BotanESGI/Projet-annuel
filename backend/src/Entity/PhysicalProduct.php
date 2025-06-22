@@ -2,14 +2,20 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    shortName: 'PhysicalProduct',
+    normalizationContext: ['groups' => ['product:read', 'physical_product:read']],
+    denormalizationContext: ['groups' => ['product:write', 'physical_product:write']]
+)]
 #[ORM\Entity]
 class PhysicalProduct extends Product
 {
     #[ORM\Column(type: "json", nullable: true)]
-    #[Groups(['product:read', 'product:write'])] // Ajout de la sérialisation pour l'API
+    #[Groups(['product:read', 'physical_product:read', 'physical_product:write'])]
     private ?array $characteristics = null;
 
     public function getCharacteristics(): ?array
