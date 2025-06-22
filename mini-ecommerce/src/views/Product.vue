@@ -102,7 +102,8 @@
         <div v-if="filteredProducts.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="(product, index) in filteredProducts" :key="product.id"
                class="relative bg-white shadow rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105">
-            <a :href="`/product/${product.id}`" :title="`Cliquer ici pour en savoir plus sur l'article ${product.name}`">
+            <a :href="`/product/${product.id}?category=${selectedCategoryId || (product.defaultCategory ? product.defaultCategory.id : '')}`"
+               :title="`Cliquer ici pour en savoir plus sur l'article ${product.name}`">
               <img loading="lazy" :src="product.image" :alt="`Image de ${product.name}`" class="w-full h-48 object-cover">
               <div class="p-4">
                 <h2 class="text-xl font-semibold text-gray-900">#{{ index + 1 }} - {{ product.name }}</h2>
@@ -127,8 +128,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 const products = ref([])
 const categories = ref([])
@@ -151,10 +155,19 @@ const API_URL = '/api/products'
 const CATEGORIES_URL = '/api/categories'
 
 onMounted(async () => {
-  await Promise.all([
-    fetchProducts(),
-    fetchCategories()
-  ])
+
+  const categoryId = route.query.category
+  if (categoryId) {
+    selectedCategoryId.value = parseInt(categoryId)
+    filters.value.category = selectedCategoryId.value
+  }
+  await fetchCategories()
+
+  await fetchProducts()
+
+  if (selectedCategoryId.value) {
+    selectedCategory.value = categories.value.find(c => c.id === selectedCategoryId.value)
+  }
 })
 
 const fetchCategories = async () => {
@@ -174,7 +187,17 @@ const fetchCategories = async () => {
 const fetchProducts = async () => {
   try {
     loading.value = true
-    const response = await axios.get(API_URL)
+    let url = API_URL + '?'
+
+    if (filters.value.search) url += `search=${encodeURIComponent(filters.value.search)}&`
+    if (filters.value.type) url += `type=${filters.value.type}&`
+    if (filters.value.minPrice) url += `min_price=${filters.value.minPrice}&`
+    if (filters.value.maxPrice) url += `max_price=${filters.value.maxPrice}&`
+    if (filters.value.priceSort) url += `price_sort=${filters.value.priceSort}&`
+    if (filters.value.dateSort) url += `date_sort=${filters.value.dateSort}&`
+    if (filters.value.category) url += `category=${filters.value.category}&`
+
+    const response = await axios.get(url)
 
     if (response.data && response.data['hydra:member']) {
       products.value = response.data['hydra:member']
@@ -245,8 +268,11 @@ const filteredProducts = computed(() => {
 
   if (filters.value.category) {
     result = result.filter(product => {
-      return product.defaultCategory && product.defaultCategory.id === filters.value.category
-    })
+      if (product.defaultCategory && product.defaultCategory.id === filters.value.category) {
+        return true;
+      }
+      return product.categories && product.categories.some(category => category.id === filters.value.category);
+    });
   }
 
   if (filters.value.minPrice) {
@@ -266,11 +292,18 @@ const filteredProducts = computed(() => {
 
   if (filters.value.dateSort) {
     result.sort((a, b) => {
-      const dateA = new Date(a.createdAt)
-      const dateB = new Date(b.createdAt)
-      if (filters.value.dateSort === 'asc') return dateA - dateB
-      return dateB - dateA
-    })
+
+      if (!a.createdAt && !b.createdAt) return 0;
+      if (!a.createdAt) return filters.value.dateSort === 'asc' ? 1 : -1;
+      if (!b.createdAt) return filters.value.dateSort === 'asc' ? -1 : 1;
+
+      const timestampA = new Date(a.createdAt).getTime();
+      const timestampB = new Date(b.createdAt).getTime();
+
+      return filters.value.dateSort === 'asc'
+          ? timestampA - timestampB
+          : timestampB - timestampA;
+    });
   }
 
   return result
@@ -279,6 +312,16 @@ const filteredProducts = computed(() => {
 const formatPrice = (price) => {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price)
 }
+
+watch(() => route.query, (newQuery) => {
+  if (newQuery.category && newQuery.category !== filters.value.category) {
+    const categoryId = parseInt(newQuery.category)
+    selectedCategoryId.value = categoryId
+    filters.value.category = categoryId
+    selectedCategory.value = categories.value.find(c => c.id === categoryId)
+    applyFilters()
+  }
+}, { deep: true })
 </script>
 
 <style scoped>

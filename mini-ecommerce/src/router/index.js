@@ -11,6 +11,7 @@ import Orders from '../views/Orders.vue'
 import ForgetPassword from '../views/ForgetPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
 import AccountVerification from '../views/AccountVerification.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 
 const routes = [
     {
@@ -83,6 +84,12 @@ const routes = [
         component: AccountVerification,
         props: true,
         meta: { guestOnly: true }
+    },
+    {
+        path: '/product/:id',
+        name: 'ProductDetail',
+        component: ProductDetail,
+        props: true
     },
 ]
 

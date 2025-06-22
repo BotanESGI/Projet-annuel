@@ -14,6 +14,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use DateTime;
 
 #[ApiResource(
     operations: [
@@ -93,9 +94,11 @@ abstract class Product
     private Collection $reviews;
 
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'products')]
+    #[Groups(['product:read'])]
     private Collection $tags;
 
     #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'products')]
+    #[Groups(['product:read'])]
     private Collection $categories;
 
     #[ORM\ManyToOne(targetEntity: Category::class)]
