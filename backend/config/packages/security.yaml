@@ -38,4 +38,6 @@ security:
         - { path: ^/api/products/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/categories$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/categories/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
+        - { path: ^/api/reviews$, methods: [ GET ], roles: PUBLIC_ACCESS }
+        - { path: ^/api/reviews/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY  }

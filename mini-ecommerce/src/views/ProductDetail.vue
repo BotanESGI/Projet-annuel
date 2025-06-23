@@ -96,6 +96,80 @@
         </template>
       </ul>
     </div>
+
+    <!-- Avis produits -->
+    <div class="max-w-6xl mx-auto p-6 mt-10 bg-white shadow-md rounded-lg">
+      <h2 class="text-xl font-semibold pb-3 text-black">Avis clients</h2>
+      <div v-if="loadingReviews" class="flex justify-center py-4">
+        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <div v-else-if="errorReviews" class="text-center text-red-600 bg-red-50 p-4 rounded-lg">
+        {{ errorReviews }}
+      </div>
+
+      <div v-else-if="reviews.length === 0" class="text-center text-gray-600 p-4">
+        Aucun avis pour ce produit pour le moment.
+      </div>
+
+      <div v-else>
+        <div v-for="review in reviews" :key="review.id" class="border-b border-gray-200 py-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center">
+              <div class="flex text-yellow-400 mr-2">
+                <span v-for="i in 5" :key="i" class="text-lg">
+                  <span v-if="i <= review.rating">★</span>
+                  <span v-else>☆</span>
+                </span>
+              </div>
+              <span class="font-medium text-black">
+              {{ review.user ? (review.user.name ? `${review.user.name} ${review.user.lastname || ''}` : 'Utilisateur') : 'Utilisateur anonyme' }}
+              </span>
+            </div>
+            <span class="text-sm text-gray-500">{{ formatDate(review.datePublication) }}</span>
+          </div>
+          <p class="text-black">{{ review.content }}</p>
+        </div>
+      </div>
+
+      <div v-if="isAuthenticated" class="mt-6 pt-4 border-t border-gray-200">
+        <h3 class="font-medium text-lg mb-3 text-black">Ajouter un avis</h3>
+        <textarea
+            v-model="newReview.content"
+            class="w-full p-3 border rounded-lg mb-3 text-black"
+            rows="3"
+            placeholder="Partagez votre expérience avec ce produit..."
+        ></textarea>
+
+        <div class="flex items-center mb-4">
+          <span class="mr-3 text-black">Note :</span>
+          <div class="flex text-gray-400">
+            <button
+                v-for="i in 5"
+                :key="i"
+                @click="newReview.rating = i"
+                class="text-2xl focus:outline-none"
+                :class="{ 'text-yellow-400': i <= newReview.rating }"
+            >
+              ★
+            </button>
+          </div>
+        </div>
+
+        <button
+            @click="submitReview"
+            class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600"
+            :disabled="submittingReview"
+        >
+          <span v-if="submittingReview">Envoi en cours...</span>
+          <span v-else>Soumettre mon avis</span>
+        </button>
+      </div>
+
+      <div v-else class="mt-6 p-4 bg-gray-50 rounded-lg text-center">
+        <p class="text-black">Connectez-vous pour laisser un avis sur ce produit.</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -115,6 +189,15 @@ export default {
     const error = ref(null);
     const quantity = ref(1);
 
+    const reviews = ref([]);
+    const loadingReviews = ref(true);
+    const errorReviews = ref(null);
+    const newReview = ref({
+      content: '',
+      rating: 0
+    });
+    const submittingReview = ref(false);
+
     const fetchProductData = async () => {
       loading.value = true;
       error.value = null;
@@ -133,6 +216,52 @@ export default {
       }
     };
 
+    const fetchReviews = async () => {
+      loadingReviews.value = true;
+      errorReviews.value = null;
+      try {
+        const response = await axios.get(`/api/reviews?product=${productId.value}`);
+        reviews.value = response.data['hydra:member'];
+      } catch (err) {
+        console.error('Erreur lors du chargement des avis:', err);
+        errorReviews.value = 'Impossible de charger les avis. Veuillez réessayer plus tard.';
+      } finally {
+        loadingReviews.value = false;
+      }
+    };
+
+    const submitReview = async () => {
+      if (!newReview.value.content || newReview.value.rating === 0) {
+        alert('Veuillez saisir un commentaire et une note');
+        return;
+      }
+
+      submittingReview.value = true;
+      try {
+        await axios.post('/api/reviews', {
+          content: newReview.value.content,
+          rating: newReview.value.rating,
+          product: `/api/products/${productId.value}`
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        newReview.value.content = '';
+        newReview.value.rating = 0;
+
+        await fetchReviews();
+
+        alert('Votre avis a été soumis et sera visible après modération. Merci !');
+      } catch (err) {
+        console.error('Erreur lors de la soumission de l\'avis:', err);
+        alert('Erreur lors de la soumission de l\'avis. Veuillez réessayer.');
+      } finally {
+        submittingReview.value = false;
+      }
+    };
+
     onMounted(async () => {
       try {
         if (route.query.category) {
@@ -144,6 +273,7 @@ export default {
         console.error("Erreur lors de la récupération de la catégorie source:", err);
       } finally {
         await fetchProductData();
+        await fetchReviews();
       }
     });
 
@@ -217,7 +347,14 @@ export default {
       formatPrice,
       formatKey,
       addToCart,
-      sourceCategory
+      sourceCategory,
+      reviews,
+      loadingReviews,
+      errorReviews,
+      newReview,
+      submittingReview,
+      fetchReviews,
+      submitReview
     };
   }
 }

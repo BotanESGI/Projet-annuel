@@ -3,6 +3,9 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Doctrine\Filter\ReviewStatusFilter;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
@@ -18,11 +21,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     operations: [
         new Get(
-            normalizationContext: ['groups' => ['review:read']],
+            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
             security: "is_granted('READ', object)"
         ),
         new GetCollection(
-            normalizationContext: ['groups' => ['review:read']],
+            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
             security: "is_granted('PUBLIC_ACCESS')"
         ),
         new Post(
@@ -43,6 +46,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     normalizationContext: ['groups' => ['review:read']],
     denormalizationContext: ['groups' => ['review:write']]
 )]
+#[ApiFilter(SearchFilter::class, properties: ['product' => 'exact'])]
+#[ApiFilter(ReviewStatusFilter::class)]
 class Review
 {
     #[ORM\Id]
@@ -69,7 +74,7 @@ class Review
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\NotBlank(message: "L'utilisateur ne doit pas être vide.")]
-    #[Groups(['review:read'])]
+    #[Groups(['review:read', 'review:user:read'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
