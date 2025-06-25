@@ -28,11 +28,6 @@ use Symfony\Component\Validator\Constraints as Assert;
             normalizationContext: ['groups' => ['review:read', 'review:user:read']],
             security: "is_granted('PUBLIC_ACCESS')"
         ),
-        new Put(
-            normalizationContext: ['groups' => ['review:read']],
-            denormalizationContext: ['groups' => ['review:write']],
-            security: "is_granted('EDIT', object)"
-        ),
         new Delete(
             security: "is_granted('DELETE', object)"
         )
