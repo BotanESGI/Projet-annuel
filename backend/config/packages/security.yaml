@@ -16,9 +16,8 @@ security:
             stateless: true
             json_login:
                 check_path: /api/login_check
-                success_handler: lexik_jwt_authentication.handler.authentication_success
+                success_handler: app.jwt_authentication_success_handler
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
         api:
             pattern: ^/api
             stateless: true
@@ -38,4 +37,6 @@ security:
         - { path: ^/api/products/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/categories$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/categories/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
+        - { path: ^/api/reviews$, methods: [ GET ], roles: PUBLIC_ACCESS }
+        - { path: ^/api/reviews/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY  }

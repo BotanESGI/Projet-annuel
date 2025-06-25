@@ -3,12 +3,15 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Doctrine\Filter\ReviewStatusFilter;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
-use App\State\ReviewStateProcessor;
+use App\State\ReviewProcessor;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\ReviewStatusEnum;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -18,18 +21,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     operations: [
         new Get(
-            normalizationContext: ['groups' => ['review:read']],
+            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
             security: "is_granted('READ', object)"
         ),
         new GetCollection(
-            normalizationContext: ['groups' => ['review:read']],
+            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
             security: "is_granted('PUBLIC_ACCESS')"
-        ),
-        new Post(
-            normalizationContext: ['groups' => ['review:read']],
-            denormalizationContext: ['groups' => ['review:write']],
-            security: "is_granted('ROLE_USER')",
-            processor: ReviewStateProcessor::class
         ),
         new Put(
             normalizationContext: ['groups' => ['review:read']],
@@ -43,6 +40,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     normalizationContext: ['groups' => ['review:read']],
     denormalizationContext: ['groups' => ['review:write']]
 )]
+#[ApiFilter(SearchFilter::class, properties: ['product' => 'exact'])]
+#[ApiFilter(ReviewStatusFilter::class)]
 class Review
 {
     #[ORM\Id]
@@ -53,6 +52,10 @@ class Review
 
     #[ORM\Column(type: 'text')]
     #[Assert\NotBlank(message: "Le contenu ne doit pas être vide.")]
+    #[Assert\Length(
+        min: 10,
+        minMessage: "Le contenu de l'avis doit comporter au moins {{ limit }} caractères."
+    )]
     #[Groups(['review:read', 'review:write'])]
     private ?string $content = null;
 
@@ -68,8 +71,7 @@ class Review
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotBlank(message: "L'utilisateur ne doit pas être vide.")]
-    #[Groups(['review:read'])]
+    #[Groups(['review:read', 'review:user:read', 'review:write'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
@@ -87,6 +89,12 @@ class Review
     #[Assert\NotBlank(message: "La date de publication ne doit pas être vide.")]
     #[Groups(['review:read'])]
     private ?\DateTimeInterface $datePublication = null;
+
+    public function __construct()
+    {
+        $this->status = ReviewStatusEnum::PENDING;
+        $this->datePublication = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int
     {

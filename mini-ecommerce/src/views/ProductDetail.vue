@@ -3,11 +3,8 @@
     <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
     <p class="text-gray-900 text-lg">Chargement des détails du produit...</p>
   </div>
-
   <div v-else-if="error" class="text-center text-red-600 bg-red-50 p-4 rounded-lg">{{ error }}</div>
-
   <div v-else class="text-black">
-    <!-- Fil d'Ariane -->
     <nav class="max-w-6xl mx-auto p-4 bg-white shadow-md rounded-lg flex flex-col md:flex-row mb-4">
       <ol class="flex items-center space-x-2 text-sm">
         <li>
@@ -39,8 +36,6 @@
         <li class="text-black">{{ product.name }}</li>
       </ol>
     </nav>
-
-    <!-- Informations du produit -->
     <div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg flex flex-col md:flex-row">
       <div class="relative md:w-1/2">
         <span class="absolute top-2 left-2 bg-gray-800 text-white text-sm font-medium px-2 py-1 rounded-lg z-10 border border-white">
@@ -68,10 +63,7 @@
         <div class="text-black mb-4">
           <p>Produit ajouté le : {{ formatDate(product.createdAt) }}</p>
         </div>
-
         <p class="text-lg font-semibold text-black mb-4">{{ formatPrice(product.price) }} €</p>
-
-        <!-- Quantité et bouton ajouter au panier -->
         <div class="flex items-center mb-4">
           <input type="number" v-model="quantity" min="1" class="border rounded-lg p-2 w-16 mr-2 text-black">
           <button @click="addToCart" class="bg-green-500 text-white rounded-lg px-4 py-2 hover:bg-green-600">
@@ -80,8 +72,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Caractéristiques du produit -->
     <div class="max-w-6xl mx-auto p-6 mt-10 bg-white shadow-md rounded-lg">
       <h2 class="text-xl font-semibold pb-3 text-black">Caractéristiques du produit</h2>
       <ul class="list-disc list-inside text-black">
@@ -95,6 +85,136 @@
           <li>Type de fichier : {{ product.filetype }}</li>
         </template>
       </ul>
+    </div>
+    <div class="max-w-6xl mx-auto p-6 mt-10 bg-white shadow-md rounded-lg">
+      <h2 class="text-xl font-semibold pb-3 text-black">Avis clients</h2>
+      <div v-if="loadingReviews" class="flex justify-center py-4">
+        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+      <div v-else-if="errorReviews" class="text-center text-red-600 bg-red-50 p-4 rounded-lg">
+        {{ errorReviews }}
+      </div>
+      <div v-else-if="reviews.length === 0" class="text-center text-gray-600 p-4">
+        Aucun avis pour ce produit pour le moment.
+      </div>
+      <div v-else>
+        <div v-for="review in displayedReviews" :key="review.id" class="flex gap-4 items-start border-b border-gray-100 py-6 group hover:bg-gray-50 transition">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center text-xl font-bold text-white shadow">
+              <span v-if="review.user && review.user.name">{{ review.user.name.charAt(0).toUpperCase() }}</span>
+              <span v-else>U</span>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <div class="flex items-center gap-2">
+    <span class="font-medium text-black">
+      {{ review.user ? (review.user.name ? `${review.user.name} ${review.user.lastname || ''}` : 'Utilisateur') : 'Utilisateur anonyme' }}
+    </span>
+                <span v-if="isMyReview(review) && review.status === 'PENDING'" class="px-2 py-0.5 text-xs bg-blue-100 text-blue-400 rounded-full border border-blue-300">
+      Votre avis (en attente de validation)
+    </span>
+                <span v-else-if="isMyReview(review) && review.status === 'REJECTED'" class="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full border border-red-300">
+      Rejeté
+    </span>
+              </div>
+              <div v-if="isMyReview(review)" class="flex gap-2 ml-4">
+                <button @click="editReview(review)" class="flex items-center text-xs text-blue-600 hover:underline">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2l-6 6m-2 2h6" />
+                  </svg>
+                  Modifier
+                </button>
+                <button @click="deleteReview(review)" class="flex items-center text-xs text-red-600 hover:underline">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 mb-1">
+              <span v-for="i in 5" :key="i" class="text-lg">
+                <span v-if="i <= review.rating" class="text-yellow-400">★</span>
+                <span v-else class="text-gray-300">★</span>
+              </span>
+              <span class="text-sm text-gray-500 ml-2">{{ formatDate(review.datePublication) }}</span>
+            </div>
+            <p class="text-black leading-relaxed">{{ review.content }}</p>
+          </div>
+        </div>
+        <div v-if="reviews.length > displayLimit" class="mt-4 flex justify-center">
+          <button
+              @click="showAllReviews = !showAllReviews"
+              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow"
+          >
+            {{ showAllReviews ? 'Voir moins' : `Voir plus (${reviews.length - displayLimit} avis supplémentaires)` }}
+          </button>
+        </div>
+      </div>
+      <div class="mt-6">
+        <template v-if="isAuthenticated && hasPurchasedProduct">
+          <div class="pt-6 border-t border-gray-200">
+            <h3 class="font-medium text-lg mb-3 text-black">Ajouter un avis</h3>
+            <div v-if="reviewMessage" :class="reviewMessageClass">
+              {{ reviewMessage }}
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 items-start">
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-xl font-bold text-white shadow">
+                  <span>{{ currentUserInitial }}</span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <textarea
+                    v-model="newReview.content"
+                    rows="3"
+                    class="w-full border rounded-lg p-2 mb-2 text-black"
+                    placeholder="Votre avis (au moins 10 caractères)"
+                    :disabled="submittingReview"
+                ></textarea>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-1">
+                    <span v-for="i in 5" :key="i" class="cursor-pointer text-2xl"
+                          @mouseenter="hoverRating = i"
+                          @mouseleave="hoverRating = 0"
+                          @click="newReview.rating = i">
+                      <span :class="[(hoverRating || newReview.rating) >= i ? 'text-yellow-400' : 'text-gray-300']">★</span>
+                    </span>
+                  </div>
+                  <span class="text-sm text-gray-500">{{ newReview.rating ? `${newReview.rating} / 5` : '' }}</span>
+                </div>
+                <button
+                    @click="submitReview"
+                    :disabled="submittingReview"
+                    class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 disabled:opacity-50"
+                >
+                  <span v-if="submittingReview" class="animate-spin inline-block mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  Poster mon avis
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-else-if="isAuthenticated && checkingPurchaseStatus">
+          <div class="p-4 bg-gray-50 rounded-lg text-center">
+            <div class="flex flex-col items-center justify-center py-4">
+              <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+              <p class="text-gray-700">Vérification de votre statut d'achat...</p>
+            </div>
+          </div>
+        </template>
+        <template v-else-if="isAuthenticated && !hasPurchasedProduct">
+          <div class="p-4 bg-yellow-50 rounded-lg text-center">
+            <p class="text-black">Vous devez acheter ce produit avant de pouvoir laisser un avis.</p>
+          </div>
+        </template>
+        <template v-else>
+          <div class="p-4 bg-gray-50 rounded-lg text-center">
+            <p class="text-black">Connectez-vous pour laisser un avis sur ce produit.</p>
+          </div>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -115,21 +235,164 @@ export default {
     const error = ref(null);
     const quantity = ref(1);
 
+    const reviewMessageClass = computed(() => {
+      if (reviewMessage.value && reviewMessage.value.startsWith('Votre avis a été soumis')) {
+        return 'mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200';
+      }
+      return 'mb-4 p-3 rounded bg-blue-50 text-blue-700 border border-blue-200';
+    });
+
+    const reviews = ref([]);
+    const loadingReviews = ref(true);
+    const errorReviews = ref(null);
+    const newReview = ref({
+      content: '',
+      rating: 0
+    });
+    const submittingReview = ref(false);
+    const displayLimit = ref(5);
+    const showAllReviews = ref(false);
+    const hasPurchasedProduct = ref(false);
+    const checkingPurchaseStatus = ref(true);
+
+    const reviewMessage = ref('');
+
+    const displayedReviews = computed(() => {
+      const currentUserId = Number(localStorage.getItem('userId'));
+      return showAllReviews.value
+          ? reviews.value.filter(
+              review =>
+                  review.status === 'VALIDATED' ||
+                  (review.status === 'PENDING' && review.user && review.user.id === currentUserId) ||
+                  (review.status === 'REJECTED' && review.user && review.user.id === currentUserId)
+          )
+          : reviews.value
+              .filter(
+                  review =>
+                      review.status === 'VALIDATED' ||
+                      (review.status === 'PENDING' && review.user && review.user.id === currentUserId) ||
+                      (review.status === 'REJECTED' && review.user && review.user.id === currentUserId)
+              )
+              .slice(0, displayLimit.value);
+    });
+
+    function isMyReview(review) {
+      const currentUserId = Number(localStorage.getItem('userId'));
+      return review.user && review.user.id === currentUserId;
+    }
+
     const fetchProductData = async () => {
       loading.value = true;
       error.value = null;
       try {
         const response = await axios.get(`/api/products/${productId.value}`);
         product.value = response.data;
-
         if (!sourceCategory.value.id && product.value.defaultCategory) {
           sourceCategory.value = product.value.defaultCategory;
         }
       } catch (err) {
-        console.error('Erreur lors du chargement des données:', err);
         error.value = 'Impossible de charger les détails du produit. Veuillez réessayer plus tard.';
       } finally {
         loading.value = false;
+      }
+    };
+
+    const fetchReviews = async () => {
+      loadingReviews.value = true;
+      errorReviews.value = null;
+      try {
+        const response = await axios.get(`/api/reviews?product=${productId.value}`);
+        reviews.value = response.data['hydra:member'];
+      } catch (err) {
+        errorReviews.value = 'Impossible de charger les avis. Veuillez réessayer plus tard.';
+      } finally {
+        loadingReviews.value = false;
+      }
+    };
+
+    const checkPurchaseStatus = async () => {
+      if (!isAuthenticated.value) {
+        checkingPurchaseStatus.value = false;
+        return;
+      }
+      checkingPurchaseStatus.value = true;
+      try {
+        const response = await axios.get(`/api/check-purchase/${productId.value}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        hasPurchasedProduct.value = response.data.hasPurchased;
+      } catch (err) {
+        hasPurchasedProduct.value = false;
+      } finally {
+        checkingPurchaseStatus.value = false;
+      }
+    };
+
+    const submitReview = async () => {
+      reviewMessage.value = '';
+      if (!newReview.value.content || newReview.value.content.length < 10) {
+        reviewMessage.value = "Veuillez saisir un commentaire d'au moins 10 caractères";
+        return;
+      }
+      if (newReview.value.rating === 0) {
+        reviewMessage.value = 'Veuillez attribuer une note';
+        return;
+      }
+      submittingReview.value = true;
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          reviewMessage.value = "Erreur d'authentification. Veuillez vous reconnecter.";
+          return;
+        }
+        await axios.post('/api/reviews', {
+          content: newReview.value.content,
+          rating: newReview.value.rating,
+          product: `/api/products/${productId.value}`
+        }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        newReview.value.content = '';
+        newReview.value.rating = 0;
+        await fetchReviews();
+        reviewMessage.value = 'Votre avis a été soumis et sera visible après modération. Merci !';
+      } catch (err) {
+        if (err.response && err.response.data) {
+          if (err.response.data.violations) {
+            const violations = err.response.data.violations.map(v => `${v.property}: ${v.message}`).join('\n');
+            reviewMessage.value = `Erreurs de validation:\n${violations}`;
+          } else {
+            reviewMessage.value = `Erreur: ${err.response.status} - ${err.response.data['hydra:description'] || JSON.stringify(err.response.data)}`;
+          }
+        } else {
+          reviewMessage.value = 'Erreur lors de la soumission de l\'avis. Veuillez réessayer.';
+        }
+      } finally {
+        submittingReview.value = false;
+      }
+    };
+
+    const editReview = (review) => {
+      reviewMessage.value = 'Fonctionnalité de modification à venir';
+    };
+
+    const deleteReview = async (review) => {
+      reviewMessage.value = '';
+      try {
+        await axios.delete(`/api/reviews/${review.id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        await fetchReviews();
+        reviewMessage.value = 'Avis supprimé avec succès';
+      } catch (err) {
+        reviewMessage.value = 'Erreur lors de la suppression de l\'avis';
       }
     };
 
@@ -141,9 +404,10 @@ export default {
           sourceCategory.value = response.data;
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération de la catégorie source:", err);
       } finally {
         await fetchProductData();
+        await fetchReviews();
+        await checkPurchaseStatus();
       }
     });
 
@@ -183,10 +447,9 @@ export default {
 
     const addToCart = async () => {
       if (!isAuthenticated.value) {
-        alert('Veuillez vous connecter pour ajouter des produits au panier');
+        reviewMessage.value = 'Veuillez vous connecter pour ajouter des produits au panier';
         return;
       }
-
       try {
         await axios.post(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
           productId: productId.value,
@@ -196,12 +459,21 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
-        alert('Produit ajouté au panier avec succès');
+        reviewMessage.value = 'Produit ajouté au panier avec succès';
       } catch (err) {
-        console.error('Erreur lors de l\'ajout au panier:', err);
-        alert('Erreur lors de l\'ajout au panier');
+        reviewMessage.value = 'Erreur lors de l\'ajout au panier';
       }
     };
+
+    const hoverRating = ref(0);
+
+    const currentUserInitial = computed(() => {
+      const name = localStorage.getItem('userName');
+      if (name && name.length > 0) {
+        return name.charAt(0).toUpperCase();
+      }
+      return 'U';
+    });
 
     return {
       product,
@@ -217,7 +489,26 @@ export default {
       formatPrice,
       formatKey,
       addToCart,
-      sourceCategory
+      sourceCategory,
+      reviews,
+      loadingReviews,
+      errorReviews,
+      newReview,
+      submittingReview,
+      fetchReviews,
+      submitReview,
+      hoverRating,
+      displayLimit,
+      showAllReviews,
+      displayedReviews,
+      hasPurchasedProduct,
+      checkingPurchaseStatus,
+      isMyReview,
+      currentUserInitial,
+      editReview,
+      deleteReview,
+      reviewMessage,
+      reviewMessageClass
     };
   }
 }
@@ -227,13 +518,17 @@ export default {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg);}
+  to { transform: rotate(360deg);}
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+.group:hover .shadow {
+  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.08);
 }
 </style>
