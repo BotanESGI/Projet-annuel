@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ReviewController extends AbstractController
 {
@@ -75,6 +76,61 @@ class ReviewController extends AbstractController
         return $this->json(
             $serializer->normalize($review, 'json', ['groups' => ['review:read']]),
             Response::HTTP_CREATED
+        );
+    }
+
+    #[Route('/api/reviews/{id}', name: 'edit_review', methods: ['PUT'])]
+    public function editReview(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Security $security,
+        ValidatorInterface $validator,
+        SerializerInterface $serializer
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $review = $entityManager->getRepository(Review::class)->find($id);
+        if (!$review) {
+            return $this->json(['message' => 'Avis introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Vérifier que l'utilisateur est bien l'auteur
+        if ($review->getUser()->getId() !== $user->getId()) {
+            throw new AccessDeniedException('Vous ne pouvez modifier que votre propre avis.');
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['content'])) {
+            $review->setContent($data['content']);
+        }
+        if (isset($data['rating'])) {
+            $review->setRating((int)$data['rating']);
+        }
+
+        $review->setStatus(ReviewStatusEnum::PENDING);
+
+        $errors = $validator->validate($review);
+        if (count($errors) > 0) {
+            $errorsArray = [];
+            foreach ($errors as $violation) {
+                $errorsArray[] = [
+                    'property' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return $this->json(['violations' => $errorsArray], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $entityManager->flush();
+
+        return $this->json(
+            $serializer->normalize($review, 'json', ['groups' => ['review:read']]),
+            Response::HTTP_OK
         );
     }
 

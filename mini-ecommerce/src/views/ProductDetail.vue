@@ -108,25 +108,26 @@
           <div class="flex-1">
             <div class="flex items-center justify-between gap-2 mb-1">
               <div class="flex items-center gap-2">
-    <span class="font-medium text-black">
-      {{ review.user ? (review.user.name ? `${review.user.name} ${review.user.lastname || ''}` : 'Utilisateur') : 'Utilisateur anonyme' }}
-    </span>
+                <span class="font-medium text-black">
+                  {{ review.user ? (review.user.name ? `${review.user.name} ${review.user.lastname || ''}` : 'Utilisateur') : 'Utilisateur anonyme' }}
+                </span>
                 <span v-if="isMyReview(review) && review.status === 'PENDING'" class="px-2 py-0.5 text-xs bg-blue-100 text-blue-400 rounded-full border border-blue-300">
-      Votre avis (en attente de validation)
-    </span>
+                  Votre avis (en attente de validation)
+                </span>
                 <span v-else-if="isMyReview(review) && review.status === 'REJECTED'" class="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full border border-red-300">
-      Rejeté
-    </span>
+                  Rejeté
+                </span>
               </div>
               <div v-if="isMyReview(review)" class="flex gap-2 ml-4">
-                <button @click="editReview(review)" class="flex items-center text-xs text-blue-600 hover:underline">
+                <button v-if="!editingReview || editingReview.id !== review.id" @click="editReview(review)" class="flex items-center text-xs text-blue-600 hover:underline">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2l-6 6m-2 2h6" />
                   </svg>
                   Modifier
                 </button>
-                <button @click="deleteReview(review)" class="flex items-center text-xs text-red-600 hover:underline">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button @click="deleteReview(review)" class="flex items-center text-xs text-red-600 hover:underline" :disabled="deletingReviewId === review.id">
+                  <span v-if="deletingReviewId === review.id" class="animate-spin inline-block mr-1 w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full"></span>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   Supprimer
@@ -140,7 +141,24 @@
               </span>
               <span class="text-sm text-gray-500 ml-2">{{ formatDate(review.datePublication) }}</span>
             </div>
-            <p class="text-black leading-relaxed">{{ review.content }}</p>
+            <div v-if="editingReview && editingReview.id === review.id">
+              <textarea v-model="editReviewContent" rows="3" class="w-full border rounded-lg p-2 mb-2 text-black"></textarea>
+              <div class="flex items-center gap-1 mb-2">
+                <span v-for="i in 5" :key="i" class="cursor-pointer text-2xl"
+                      @click="editReviewRating = i">
+                  <span :class="[editReviewRating >= i ? 'text-yellow-400' : 'text-gray-300']">★</span>
+                </span>
+                <span class="text-sm text-gray-500 ml-2">{{ editReviewRating ? `${editReviewRating} / 5` : '' }}</span>
+              </div>
+              <button @click="submitEditReview" :disabled="submittingReview" class="bg-blue-500 text-white rounded-lg px-4 py-2 mr-2">
+                <span v-if="submittingReview" class="animate-spin inline-block mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                Enregistrer
+              </button>
+              <button @click="cancelEditReview" class="bg-gray-300 text-black rounded-lg px-4 py-2">Annuler</button>
+            </div>
+            <div v-else>
+              <p class="text-black leading-relaxed">{{ review.content }}</p>
+            </div>
           </div>
         </div>
         <div v-if="reviews.length > displayLimit" class="mt-4 flex justify-center">
@@ -236,10 +254,10 @@ export default {
     const quantity = ref(1);
 
     const reviewMessageClass = computed(() => {
-      if (reviewMessage.value && reviewMessage.value.startsWith('Votre avis a été soumis')) {
+      if (reviewMessage.value && reviewMessage.value.toLowerCase().includes('succès')) {
         return 'mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200';
       }
-      return 'mb-4 p-3 rounded bg-blue-50 text-blue-700 border border-blue-200';
+      return 'mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200';
     });
 
     const reviews = ref([]);
@@ -256,6 +274,12 @@ export default {
     const checkingPurchaseStatus = ref(true);
 
     const reviewMessage = ref('');
+
+    const editingReview = ref(null);
+    const editReviewContent = ref('');
+    const editReviewRating = ref(0);
+
+    const deletingReviewId = ref(null);
 
     const displayedReviews = computed(() => {
       const currentUserId = Number(localStorage.getItem('userId'));
@@ -378,11 +402,51 @@ export default {
     };
 
     const editReview = (review) => {
-      reviewMessage.value = 'Fonctionnalité de modification à venir';
+      editingReview.value = review;
+      editReviewContent.value = review.content;
+      editReviewRating.value = review.rating;
+    };
+
+    const cancelEditReview = () => {
+      editingReview.value = null;
+      editReviewContent.value = '';
+      editReviewRating.value = 0;
+    };
+
+    const submitEditReview = async () => {
+      reviewMessage.value = '';
+      if (!editReviewContent.value || editReviewContent.value.length < 10) {
+        reviewMessage.value = "Veuillez saisir un commentaire d'au moins 10 caractères";
+        return;
+      }
+      if (editReviewRating.value === 0) {
+        reviewMessage.value = 'Veuillez attribuer une note';
+        return;
+      }
+      submittingReview.value = true;
+      try {
+        await axios.put(`/api/reviews/${editingReview.value.id}`, {
+          content: editReviewContent.value,
+          rating: editReviewRating.value
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        await fetchReviews();
+        reviewMessage.value = 'Votre avis a été modifié avec succès et sera visible après modération.';
+        cancelEditReview();
+      } catch (err) {
+        reviewMessage.value = 'Erreur lors de la modification de l\'avis.';
+      } finally {
+        submittingReview.value = false;
+      }
     };
 
     const deleteReview = async (review) => {
       reviewMessage.value = '';
+      deletingReviewId.value = review.id;
       try {
         await axios.delete(`/api/reviews/${review.id}`, {
           headers: {
@@ -393,6 +457,8 @@ export default {
         reviewMessage.value = 'Avis supprimé avec succès';
       } catch (err) {
         reviewMessage.value = 'Erreur lors de la suppression de l\'avis';
+      } finally {
+        deletingReviewId.value = null;
       }
     };
 
@@ -508,7 +574,13 @@ export default {
       editReview,
       deleteReview,
       reviewMessage,
-      reviewMessageClass
+      reviewMessageClass,
+      editingReview,
+      editReviewContent,
+      editReviewRating,
+      cancelEditReview,
+      submitEditReview,
+      deletingReviewId
     };
   }
 }
