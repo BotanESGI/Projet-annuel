@@ -36,9 +36,12 @@ class Address
     #[ORM\Column(type: 'boolean')]
     private bool $isDefault = false;
 
-    public function __construct() {
+    #[ORM\Column(type: 'string', length: 20)]
+    #[Assert\Choice(choices: ['shipping', 'billing'], message: "Le type doit être 'shipping' ou 'billing'.")]
+    private ?string $type = null;
 
-    }
+    #[ORM\Column(type: 'boolean')]
+    private bool $isDefaultBilling = false;
 
     public function getId(): ?int
     {
@@ -97,6 +100,28 @@ class Address
     public function setIsDefault(bool $isDefault): self
     {
         $this->isDefault = $isDefault;
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+        return $this;
+    }
+
+    public function isDefaultBilling(): bool
+    {
+        return $this->isDefaultBilling;
+    }
+
+    public function setIsDefaultBilling(bool $isDefaultBilling): self
+    {
+        $this->isDefaultBilling = $isDefaultBilling;
         return $this;
     }
 }
