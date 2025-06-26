@@ -99,4 +99,74 @@ class CartController extends AbstractController
 
         return $this->json(['items' => $items]);
     }
+
+    #[Route('/api/cart/item/{id}', name: 'cart_update_item', methods: ['PUT'])]
+    public function updateCartItem(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        Security $security
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], 401);
+        }
+
+        $cartItem = $em->getRepository(CartItem::class)->find($id);
+        if (!$cartItem || $cartItem->getCart()->getUser() !== $user) {
+            return $this->json(['message' => 'Article non trouvé'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $quantity = max(1, (int)($data['quantity'] ?? 1));
+        $cartItem->setQuantity($quantity);
+        $em->flush();
+
+        return $this->json(['message' => 'Quantité mise à jour']);
+    }
+
+    #[Route('/api/cart/item/{id}', name: 'cart_remove_item', methods: ['DELETE'])]
+    public function removeCartItem(
+        int $id,
+        EntityManagerInterface $em,
+        Security $security
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], 401);
+        }
+
+        $cartItem = $em->getRepository(CartItem::class)->find($id);
+        if (!$cartItem || $cartItem->getCart()->getUser() !== $user) {
+            return $this->json(['message' => 'Article non trouvé'], 404);
+        }
+
+        $em->remove($cartItem);
+        $em->flush();
+
+        return $this->json(['message' => 'Article supprimé']);
+    }
+
+    #[Route('/api/cart', name: 'cart_clear', methods: ['DELETE'])]
+    public function clearCart(
+        EntityManagerInterface $em,
+        Security $security
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], 401);
+        }
+
+        $cart = $em->getRepository(Cart::class)->findOneBy(['user' => $user]);
+        if (!$cart) {
+            return $this->json(['message' => 'Panier déjà vide']);
+        }
+
+        foreach ($cart->getItems() as $item) {
+            $em->remove($item);
+        }
+        $em->flush();
+
+        return $this->json(['message' => 'Panier vidé']);
+    }
 }

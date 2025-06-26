@@ -21,8 +21,10 @@
             <span class="cart-item-price">{{ formatPrice(item.product.price) }} €</span>
             <span class="cart-item-qty-label">Quantité :</span>
             <input type="number" v-model.number="item.quantity" min="1" class="cart-item-qty" @change="updateQuantity(item)">
-            <button @click="removeItem(item)" class="cart-item-remove">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon-trash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span v-if="updatingItemId === item.id" class="loader-btn"></span>
+            <button @click="removeItem(item)" class="cart-item-remove" :disabled="removingItemId === item.id">
+              <span v-if="removingItemId === item.id" class="loader-btn"></span>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="icon-trash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               Supprimer
@@ -77,6 +79,8 @@ const cartMessage = ref('')
 const cartMessageType = ref('success')
 const checkingOut = ref(false)
 const clearingCart = ref(false)
+const removingItemId = ref(null)
+const updatingItemId = ref(null)
 const router = useRouter()
 
 const fetchCart = async () => {
@@ -98,6 +102,7 @@ const fetchCart = async () => {
 
 const updateQuantity = async (item) => {
   if (item.quantity < 1) item.quantity = 1
+  updatingItemId.value = item.id
   try {
     await axios.put(`/api/cart/item/${item.id}`, {
       quantity: item.quantity
@@ -106,28 +111,33 @@ const updateQuantity = async (item) => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    cartMessage.value = 'Quantité mise à jour'
+    cartMessage.value = 'Quantité mise à jour avec succès'
     cartMessageType.value = 'success'
     await fetchCart()
   } catch (err) {
     cartMessage.value = 'Erreur lors de la mise à jour de la quantité'
     cartMessageType.value = 'error'
+  } finally {
+    updatingItemId.value = null
   }
 }
 
 const removeItem = async (item) => {
+  removingItemId.value = item.id
   try {
     await axios.delete(`/api/cart/item/${item.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    cartMessage.value = 'Produit retiré du panier'
+    cartMessage.value = 'Produit retiré du panier avec succès'
     cartMessageType.value = 'success'
     await fetchCart()
   } catch (err) {
     cartMessage.value = 'Erreur lors de la suppression du produit'
     cartMessageType.value = 'error'
+  } finally {
+    removingItemId.value = null
   }
 }
 
@@ -140,7 +150,7 @@ const clearCart = async () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    cartMessage.value = 'Panier vidé'
+    cartMessage.value = 'Panier vidé avec succès'
     cartMessageType.value = 'success'
     await fetchCart()
   } catch (err) {
@@ -314,6 +324,7 @@ onMounted(fetchCart)
   font-weight: 700;
   color: #22223b;
   margin-left: 32px;
+  margin-right: 32px;
   min-width: 90px;
   text-align: right;
 }
