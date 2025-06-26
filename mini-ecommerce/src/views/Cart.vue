@@ -55,7 +55,7 @@
                 <span class="cart-summary-total">{{ formatPrice(totalPrice) }} €</span>
               </div>
             </div>
-            <button @click="checkout" :disabled="cartItems.length === 0 || checkingOut" class="cart-checkout-btn">
+            <button @click="goToCheckout" :disabled="cartItems.length === 0 || checkingOut" class="cart-checkout-btn">
               <span v-if="checkingOut" class="loader-btn"></span>
               Passer la commande
             </button>
@@ -161,26 +161,8 @@ const clearCart = async () => {
   }
 }
 
-const checkout = async () => {
-  checkingOut.value = true
-  cartMessage.value = ''
-  try {
-    await axios.post('/api/cart/checkout', {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-    cartMessage.value = 'Commande passée avec succès'
-    cartMessageType.value = 'success'
-    setTimeout(() => {
-      router.push('/orders')
-    }, 1500)
-  } catch (err) {
-    cartMessage.value = 'Erreur lors de la validation de la commande'
-    cartMessageType.value = 'error'
-  } finally {
-    checkingOut.value = false
-  }
+const goToCheckout = () => {
+  router.push('/checkout')
 }
 
 const totalPrice = computed(() =>
@@ -358,31 +340,35 @@ onMounted(fetchCart)
   font-weight: 700;
   font-size: 1.25rem;
   color: #2563eb;
-}
-.cart-checkout-btn {
-  width: 100%;
-  margin-top: 18px;
-  background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px 0 rgba(34,197,94,0.08);
-  transition: background 0.2s, box-shadow 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+}.cart-checkout-btn {
+   width: 100%;
+   margin-top: 18px;
+   background: #22c55e;
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   padding: 8px 0;
+   font-size: 1rem;
+   font-weight: 600;
+   cursor: pointer;
+   box-shadow: 0 2px 8px 0 rgba(34,197,94,0.10);
+   transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   min-height: 0;
+ }
 .cart-checkout-btn:hover:enabled {
-  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+  background: #16a34a;
+  box-shadow: 0 4px 16px 0 rgba(34,197,94,0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 .cart-checkout-btn:disabled {
   background: #bbf7d0;
   color: #6ee7b7;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 .cart-clear-btn {
   background: #fff;
@@ -391,7 +377,6 @@ onMounted(fetchCart)
   border-radius: 8px;
   padding: 8px 18px 8px 10px;
   font-weight: 500;
-  font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border 0.2s;
   display: flex;

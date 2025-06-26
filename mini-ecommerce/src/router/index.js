@@ -13,6 +13,7 @@ import ResetPassword from '../views/ResetPassword.vue'
 import AccountVerification from '../views/AccountVerification.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Cart from '../views/Cart.vue'
+import Checkout from '../views/Checkout.vue'
 
 const routes = [
     {
@@ -98,6 +99,12 @@ const routes = [
         component: Cart,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/checkout',
+        name: 'Checkout',
+        component: Checkout,
+        meta: { requiresAuth: true, fromCartOnly: true }
+    },
 ]
 
 const router = createRouter({
@@ -114,6 +121,9 @@ router.beforeEach((to, from, next) => {
 
     else if (to.meta.requiresAuth && !isAuthenticated) {
         next({ path: '/login' })
+    }
+    else if (to.meta.fromCartOnly && from.path !== '/cart') {
+        next({ path: '/cart' })
     }
     else {
         next()

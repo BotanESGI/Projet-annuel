@@ -72,32 +72,38 @@ class AddressController
                 $address->setType($data['type']);
             }
 
-            if (isset($data['isDefault']) && $data['isDefault']) {
-                $address->setIsDefault(true);
-                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefault' => true]);
-                foreach ($userAddresses as $existingAddress) {
-                    $existingAddress->setIsDefault(false);
-                }
-            } else {
-                $address->setIsDefault(false);
-                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
-                if (count($userAddresses) === 0) {
+            if (isset($data['type']) && $data['type'] === 'shipping') {
+                if (isset($data['isDefault']) && $data['isDefault']) {
                     $address->setIsDefault(true);
+                    $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefault' => true]);
+                    foreach ($userAddresses as $existingAddress) {
+                        $existingAddress->setIsDefault(false);
+                    }
+                } else {
+                    $address->setIsDefault(false);
+                    $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'shipping']);
+                    if (count($userAddresses) === 0) {
+                        $address->setIsDefault(true);
+                    }
                 }
+                $address->setIsDefaultBilling(false);
             }
 
-            if (isset($data['isDefaultBilling']) && $data['isDefaultBilling']) {
-                $address->setIsDefaultBilling(true);
-                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefaultBilling' => true]);
-                foreach ($userAddresses as $existingAddress) {
-                    $existingAddress->setIsDefaultBilling(false);
-                }
-            } else {
-                $address->setIsDefaultBilling(false);
-                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
-                if (count($userAddresses) === 0) {
+            if (isset($data['type']) && $data['type'] === 'billing') {
+                if (isset($data['isDefaultBilling']) && $data['isDefaultBilling']) {
                     $address->setIsDefaultBilling(true);
+                    $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefaultBilling' => true]);
+                    foreach ($userAddresses as $existingAddress) {
+                        $existingAddress->setIsDefaultBilling(false);
+                    }
+                } else {
+                    $address->setIsDefaultBilling(false);
+                    $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'billing']);
+                    if (count($userAddresses) === 0) {
+                        $address->setIsDefaultBilling(true);
+                    }
                 }
+                $address->setIsDefault(false);
             }
 
             $errors = $validator->validate($address);
@@ -254,7 +260,7 @@ class AddressController
             $em->flush();
 
             if ($wasDefault) {
-                $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+                $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'shipping']);
                 if (count($remainingAddresses) > 0) {
                     $remainingAddresses[0]->setIsDefault(true);
                     $em->flush();
@@ -262,7 +268,7 @@ class AddressController
             }
 
             if ($wasDefaultBilling) {
-                $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+                $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'billing']);
                 if (count($remainingAddresses) > 0) {
                     $remainingAddresses[0]->setIsDefaultBilling(true);
                     $em->flush();
@@ -296,7 +302,7 @@ class AddressController
                 return new JsonResponse(['error' => 'Adresse non trouvée'], Response::HTTP_NOT_FOUND);
             }
 
-            $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+            $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'shipping']);
             foreach ($userAddresses as $existingAddress) {
                 $existingAddress->setIsDefault($existingAddress->getId() === $id);
             }
@@ -341,7 +347,7 @@ class AddressController
                 return new JsonResponse(['error' => 'Adresse non trouvée'], Response::HTTP_NOT_FOUND);
             }
 
-            $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+            $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'type' => 'billing']);
             foreach ($userAddresses as $existingAddress) {
                 $existingAddress->setIsDefaultBilling($existingAddress->getId() === $id);
             }
