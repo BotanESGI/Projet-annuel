@@ -105,7 +105,8 @@ class OrderController extends AbstractController
         }
 
         // Vérifier le paiement Stripe
-        Stripe::setApiKey('sk_test_51PX6nWRv1OMvXsRITDD8oturLPyAenrdy6hArwzJWbWBdP6v0YWk7NQbeMfYsFvUB6RBpIkHF3EPWF78LVsLJJSa00SN2fDR4H');
+        $stripeSecretKey = getenv('STRIPE_SECRET_KEY');
+        Stripe::setApiKey($stripeSecretKey);
         $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
 
         if ($paymentIntent->status !== 'succeeded') {
