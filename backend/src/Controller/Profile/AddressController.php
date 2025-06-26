@@ -32,7 +32,9 @@ class AddressController
                 'street' => $address->getStreet(),
                 'city' => $address->getCity(),
                 'postalCode' => $address->getPostalCode(),
-                'isDefault' => $address->isDefault()
+                'isDefault' => $address->isDefault(),
+                'isDefaultBilling' => $address->isDefaultBilling(),
+                'type' => $address->getType()
             ];
         }
 
@@ -66,19 +68,35 @@ class AddressController
                 ->setPostalCode($data['postalCode'])
                 ->setUser($user);
 
+            if (isset($data['type'])) {
+                $address->setType($data['type']);
+            }
+
             if (isset($data['isDefault']) && $data['isDefault']) {
                 $address->setIsDefault(true);
-
                 $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefault' => true]);
                 foreach ($userAddresses as $existingAddress) {
                     $existingAddress->setIsDefault(false);
                 }
             } else {
                 $address->setIsDefault(false);
-
                 $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
                 if (count($userAddresses) === 0) {
                     $address->setIsDefault(true);
+                }
+            }
+
+            if (isset($data['isDefaultBilling']) && $data['isDefaultBilling']) {
+                $address->setIsDefaultBilling(true);
+                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefaultBilling' => true]);
+                foreach ($userAddresses as $existingAddress) {
+                    $existingAddress->setIsDefaultBilling(false);
+                }
+            } else {
+                $address->setIsDefaultBilling(false);
+                $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+                if (count($userAddresses) === 0) {
+                    $address->setIsDefaultBilling(true);
                 }
             }
 
@@ -101,7 +119,9 @@ class AddressController
                     'street' => $address->getStreet(),
                     'city' => $address->getCity(),
                     'postalCode' => $address->getPostalCode(),
-                    'isDefault' => $address->isDefault()
+                    'isDefault' => $address->isDefault(),
+                    'isDefaultBilling' => $address->isDefaultBilling(),
+                    'type' => $address->getType()
                 ]
             ], Response::HTTP_CREATED);
 
@@ -146,6 +166,10 @@ class AddressController
                 $address->setPostalCode($data['postalCode']);
             }
 
+            if (isset($data['type'])) {
+                $address->setType($data['type']);
+            }
+
             if (isset($data['isDefault'])) {
                 $isDefault = (bool) $data['isDefault'];
                 $address->setIsDefault($isDefault);
@@ -155,6 +179,20 @@ class AddressController
                     foreach ($userAddresses as $existingAddress) {
                         if ($existingAddress->getId() !== $id) {
                             $existingAddress->setIsDefault(false);
+                        }
+                    }
+                }
+            }
+
+            if (isset($data['isDefaultBilling'])) {
+                $isDefaultBilling = (bool) $data['isDefaultBilling'];
+                $address->setIsDefaultBilling($isDefaultBilling);
+
+                if ($isDefaultBilling) {
+                    $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user, 'isDefaultBilling' => true]);
+                    foreach ($userAddresses as $existingAddress) {
+                        if ($existingAddress->getId() !== $id) {
+                            $existingAddress->setIsDefaultBilling(false);
                         }
                     }
                 }
@@ -178,7 +216,9 @@ class AddressController
                     'street' => $address->getStreet(),
                     'city' => $address->getCity(),
                     'postalCode' => $address->getPostalCode(),
-                    'isDefault' => $address->isDefault()
+                    'isDefault' => $address->isDefault(),
+                    'isDefaultBilling' => $address->isDefaultBilling(),
+                    'type' => $address->getType()
                 ]
             ]);
 
@@ -208,6 +248,7 @@ class AddressController
             }
 
             $wasDefault = $address->isDefault();
+            $wasDefaultBilling = $address->isDefaultBilling();
 
             $em->remove($address);
             $em->flush();
@@ -216,6 +257,14 @@ class AddressController
                 $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
                 if (count($remainingAddresses) > 0) {
                     $remainingAddresses[0]->setIsDefault(true);
+                    $em->flush();
+                }
+            }
+
+            if ($wasDefaultBilling) {
+                $remainingAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+                if (count($remainingAddresses) > 0) {
+                    $remainingAddresses[0]->setIsDefaultBilling(true);
                     $em->flush();
                 }
             }
@@ -261,13 +310,60 @@ class AddressController
                     'street' => $address->getStreet(),
                     'city' => $address->getCity(),
                     'postalCode' => $address->getPostalCode(),
-                    'isDefault' => true
+                    'isDefault' => true,
+                    'isDefaultBilling' => $address->isDefaultBilling(),
+                    'type' => $address->getType()
                 ]
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'error' => 'Une erreur est survenue lors de la définition de l\'adresse par défaut',
+                'details' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/addresses/{id}/default-billing', name: 'address_set_default_billing', methods: ['PUT'])]
+    public function setDefaultBillingAddress(
+        int $id,
+        EntityManagerInterface $em,
+        #[CurrentUser] ?User $user
+    ): JsonResponse {
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $address = $em->getRepository(Address::class)->findOneBy(['id' => $id, 'user' => $user]);
+
+            if (!$address) {
+                return new JsonResponse(['error' => 'Adresse non trouvée'], Response::HTTP_NOT_FOUND);
+            }
+
+            $userAddresses = $em->getRepository(Address::class)->findBy(['user' => $user]);
+            foreach ($userAddresses as $existingAddress) {
+                $existingAddress->setIsDefaultBilling($existingAddress->getId() === $id);
+            }
+
+            $em->flush();
+
+            return new JsonResponse([
+                'message' => 'Adresse de facturation par défaut mise à jour',
+                'address' => [
+                    'id' => $address->getId(),
+                    'street' => $address->getStreet(),
+                    'city' => $address->getCity(),
+                    'postalCode' => $address->getPostalCode(),
+                    'isDefault' => $address->isDefault(),
+                    'isDefaultBilling' => true,
+                    'type' => $address->getType()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => 'Une erreur est survenue lors de la définition de l\'adresse de facturation par défaut',
                 'details' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
