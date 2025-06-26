@@ -15,6 +15,7 @@ use App\Entity\Tag;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use App\Enum\ReviewStatusEnum;
+use App\Entity\OrderAddress;
 
 class AppFixtures extends Fixture
 {
@@ -576,20 +577,97 @@ class AppFixtures extends Fixture
 
         // Adresses
         foreach ($users as $index => $user) {
-            $address = new Address();
-            $address->setStreet("Rue {$index} Principale");
-            $address->setCity("Ville {$index}");
-            $address->setPostalCode("7500{$index}");
-            $address->setUser($user);
-            $manager->persist($address);
+            // Adresse de livraison
+            $shippingAddress = new Address();
+            $shippingAddress->setStreet("Rue {$index} Principale");
+            $shippingAddress->setCity("Ville {$index}");
+            $shippingAddress->setPostalCode("7500{$index}");
+            $shippingAddress->setUser($user);
+            $shippingAddress->setType('shipping');
+            $shippingAddress->setIsDefault(true);
+            $shippingAddress->setIsDefaultBilling(false);
+            $manager->persist($shippingAddress);
+
+            // Adresse de facturation
+            $billingAddress = new Address();
+            $billingAddress->setStreet("Avenue {$index} Secondaire");
+            $billingAddress->setCity("VilleFacture {$index}");
+            $billingAddress->setPostalCode("6900{$index}");
+            $billingAddress->setUser($user);
+            $billingAddress->setType('billing');
+            $billingAddress->setIsDefault(false);
+            $billingAddress->setIsDefaultBilling(true);
+            $manager->persist($billingAddress);
+        }
+
+        // Commandes
+        foreach ($users as $index => $user) {
+            // Adresse de livraison
+            $shippingAddress = new Address();
+            $shippingAddress->setStreet("Rue {$index} Principale");
+            $shippingAddress->setCity("Ville {$index}");
+            $shippingAddress->setPostalCode("7500{$index}");
+            $shippingAddress->setUser($user);
+            $shippingAddress->setType('shipping');
+            $shippingAddress->setIsDefault(true);
+            $shippingAddress->setIsDefaultBilling(false);
+            $manager->persist($shippingAddress);
+
+            // Adresse de facturation
+            $billingAddress = new Address();
+            $billingAddress->setStreet("Avenue {$index} Secondaire");
+            $billingAddress->setCity("VilleFacture {$index}");
+            $billingAddress->setPostalCode("6900{$index}");
+            $billingAddress->setUser($user);
+            $billingAddress->setType('billing');
+            $billingAddress->setIsDefault(false);
+            $billingAddress->setIsDefaultBilling(true);
+            $manager->persist($billingAddress);
         }
 
         // Commandes
         foreach ($users as $user) {
+            // Récupérer les adresses de l'utilisateur
+            $shipping = null;
+            $billing = null;
+            foreach ($user->getAddresses() as $address) {
+                if ($address->getType() === 'shipping' && $address->isDefault()) {
+                    $shipping = $address;
+                }
+                if ($address->getType() === 'billing' && $address->isDefaultBilling()) {
+                    $billing = $address;
+                }
+            }
+
+            // Si une des adresses n'existe pas, on met des valeurs par défaut
+            if (!$shipping) {
+                $shipping = (new Address())
+                    ->setStreet('Rue inconnue')
+                    ->setCity('Ville inconnue')
+                    ->setPostalCode('00000');
+            }
+            if (!$billing) {
+                $billing = (new Address())
+                    ->setStreet('Avenue inconnue')
+                    ->setCity('Ville inconnue')
+                    ->setPostalCode('00000');
+            }
+
+            // Créer OrderAddress
+            $orderAddress = new OrderAddress();
+            $orderAddress->setShippingStreet($shipping->getStreet());
+            $orderAddress->setShippingCity($shipping->getCity());
+            $orderAddress->setShippingPostalCode($shipping->getPostalCode());
+            $orderAddress->setBillingStreet($billing->getStreet());
+            $orderAddress->setBillingCity($billing->getCity());
+            $orderAddress->setBillingPostalCode($billing->getPostalCode());
+            $manager->persist($orderAddress);
+
             $order = new Orders();
             $order->setUser($user);
             $order->setTotal(rand(100, 1000));
             $order->setDate(new \DateTimeImmutable());
+            $order->setShippingAddress($orderAddress);
             $manager->persist($order);
 
             foreach (array_rand($products, 2) as $index) {

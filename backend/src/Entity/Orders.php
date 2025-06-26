@@ -120,4 +120,15 @@ class Orders
         return $this;
     }
 
+    public function getShippingAddress(): ?OrderAddress
+    {
+        return $this->shippingAddress;
+    }
+
+    public function setShippingAddress(OrderAddress $shippingAddress): static
+    {
+        $this->shippingAddress = $shippingAddress;
+        return $this;
+    }
+
 }
