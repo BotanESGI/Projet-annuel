@@ -1,4 +1,5 @@
 <template>
+  <AlertMessage :message="cartMessage" :type="cartMessageType" />
   <div v-if="loading" class="flex flex-col items-center justify-center py-12">
     <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
     <p class="text-gray-900 text-lg">Chargement des détails du produit...</p>
@@ -66,7 +67,8 @@
         <p class="text-lg font-semibold text-black mb-4">{{ formatPrice(product.price) }} €</p>
         <div class="flex items-center mb-4">
           <input type="number" v-model="quantity" min="1" class="border rounded-lg p-2 w-16 mr-2 text-black">
-          <button @click="addToCart" class="bg-green-500 text-white rounded-lg px-4 py-2 hover:bg-green-600">
+          <button @click="addToCart" :disabled="addingToCart" class="bg-green-500 text-white rounded-lg px-4 py-2 hover:bg-green-600 flex items-center">
+            <span v-if="addingToCart" class="animate-spin inline-block mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
             Ajouter au panier
           </button>
         </div>
@@ -238,20 +240,26 @@
 </template>
 
 <script>
+import AlertMessage from '@/components/AlertMessage.vue'
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
 export default {
   name: 'ProductDetail',
+  components: { AlertMessage },
   setup() {
     const route = useRoute();
+    const router = useRouter();
     const sourceCategory = ref({});
     const productId = computed(() => route.params.id);
     const product = ref({});
     const loading = ref(true);
     const error = ref(null);
     const quantity = ref(1);
+    const addingToCart = ref(false);
+
+    const cartMessage = ref('');
 
     const reviewMessageClass = computed(() => {
       if (reviewMessage.value && reviewMessage.value.toLowerCase().includes('succès')) {
@@ -272,7 +280,7 @@ export default {
     const showAllReviews = ref(false);
     const hasPurchasedProduct = ref(false);
     const checkingPurchaseStatus = ref(true);
-
+    const cartMessageType = ref('success')
     const reviewMessage = ref('');
 
     const editingReview = ref(null);
@@ -513,23 +521,33 @@ export default {
 
     const addToCart = async () => {
       if (!isAuthenticated.value) {
-        reviewMessage.value = 'Veuillez vous connecter pour ajouter des produits au panier';
-        return;
+        cartMessage.value = 'Veuillez vous connecter pour ajouter des produits au panier'
+        cartMessageType.value = 'error'
+        return
       }
+      addingToCart.value = true
+      cartMessage.value = ''
       try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
+        await axios.post(`/api/cart/add`, {
           productId: productId.value,
           quantity: quantity.value
         }, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-        });
-        reviewMessage.value = 'Produit ajouté au panier avec succès';
+        })
+        cartMessage.value = 'Produit ajouté au panier avec succès'
+        cartMessageType.value = 'success'
+        setTimeout(() => {
+          router.push('/cart')
+        }, 4000)
       } catch (err) {
-        reviewMessage.value = 'Erreur lors de l\'ajout au panier';
+        cartMessage.value = "Erreur lors de l'ajout au panier"
+        cartMessageType.value = 'error'
+      } finally {
+        addingToCart.value = false
       }
-    };
+    }
 
     const hoverRating = ref(0);
 
@@ -555,6 +573,7 @@ export default {
       formatPrice,
       formatKey,
       addToCart,
+      addingToCart,
       sourceCategory,
       reviews,
       loadingReviews,
@@ -580,7 +599,9 @@ export default {
       editReviewRating,
       cancelEditReview,
       submitEditReview,
-      deletingReviewId
+      deletingReviewId,
+      cartMessage,
+      cartMessageType
     };
   }
 }

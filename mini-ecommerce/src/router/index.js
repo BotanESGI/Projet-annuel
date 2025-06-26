@@ -12,6 +12,7 @@ import ForgetPassword from '../views/ForgetPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
 import AccountVerification from '../views/AccountVerification.vue'
 import ProductDetail from '../views/ProductDetail.vue'
+import Cart from '../views/Cart.vue'
 
 const routes = [
     {
@@ -90,6 +91,12 @@ const routes = [
         name: 'ProductDetail',
         component: ProductDetail,
         props: true
+    },
+    {
+        path: '/cart',
+        name: 'Panier',
+        component: Cart,
+        meta: { requiresAuth: true }
     },
 ]
 

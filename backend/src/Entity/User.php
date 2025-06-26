@@ -75,8 +75,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'user', cascade: ['remove'], orphanRemoval: true)]
     private Collection $reviews;
 
-    #[ORM\OneToMany(targetEntity: Cart::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
-    private Collection $carts;
+    #[ORM\OneToOne(mappedBy: "user", targetEntity: Cart::class, cascade: ["persist", "remove"])]
+    private ?Cart $cart = null;
 
     #[ORM\OneToMany(targetEntity: Invoice::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private Collection $invoices;
@@ -171,15 +171,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCarts(): Collection
+    public function getCart(): ?Cart
     {
-        return $this->carts;
+        return $this->cart;
     }
 
-    public function addCart(Cart $cart): static
+    public function setCart(?Cart $cart): static
     {
-        if (!$this->carts->contains($cart)) {
-            $this->carts->add($cart);
+        $this->cart = $cart;
+        if ($cart && $cart->getUser() !== $this) {
             $cart->setUser($this);
         }
         return $this;
