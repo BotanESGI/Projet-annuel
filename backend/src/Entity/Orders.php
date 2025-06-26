@@ -34,6 +34,10 @@ class Orders
     #[ORM\JoinColumn(nullable: true)]
     private ?Invoice $invoice = null;
 
+    #[ORM\OneToOne(targetEntity: OrderAddress::class, cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?OrderAddress $shippingAddress = null;
+
     public function __construct()
     {
         $this->orderItems = new ArrayCollection();
