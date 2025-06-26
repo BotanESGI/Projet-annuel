@@ -105,7 +105,10 @@ class OrderController extends AbstractController
         }
 
         // Vérifier le paiement Stripe
-        $stripeSecretKey = getenv('STRIPE_SECRET_KEY');
+        $stripeSecretKey = $_ENV['STRIPE_SECRET_KEY'] ?? null;
+        if (!$stripeSecretKey) {
+            return $this->json(['message' => 'Clé Stripe manquante'], 500);
+        }
         Stripe::setApiKey($stripeSecretKey);
         $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
 
