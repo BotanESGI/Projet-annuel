@@ -14,6 +14,7 @@ import AccountVerification from '../views/AccountVerification.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Cart from '../views/Cart.vue'
 import Checkout from '../views/Checkout.vue'
+import OrderConfirmation from '../views/OrderConfirmation.vue'
 
 const routes = [
     {
@@ -23,7 +24,7 @@ const routes = [
     },
     {
         path: '/about',
-        name: 'APropos',
+        name: 'A propos',
         component: About
     },
     {
@@ -89,7 +90,7 @@ const routes = [
     },
     {
         path: '/product/:id',
-        name: 'ProductDetail',
+        name: 'Detail du produit',
         component: ProductDetail,
         props: true
     },
@@ -101,10 +102,16 @@ const routes = [
     },
     {
         path: '/checkout',
-        name: 'Checkout',
+        name: 'Tunne de commande',
         component: Checkout,
         meta: { requiresAuth: true, fromCartOnly: true }
     },
+    {
+        path: '/order/:id/confirmation',
+        name: 'Confirmation de commande',
+        component: OrderConfirmation,
+        meta: { requiresAuth: true }
+    }
 ]
 
 const router = createRouter({
