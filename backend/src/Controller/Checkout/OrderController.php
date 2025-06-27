@@ -84,6 +84,57 @@ class OrderController extends AbstractController
         return $this->json(['clientSecret' => $paymentIntent->client_secret]);
     }
 
+    #[Route('/api/orders/{id}', name: 'order_details', methods: ['GET'])]
+    public function orderDetails(
+        int $id,
+        EntityManagerInterface $em,
+        Security $security
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], 401);
+        }
+
+        $order = $em->getRepository(Orders::class)->find($id);
+        if (!$order || $order->getUser()->getId() !== $user->getId()) {
+            return $this->json(['message' => 'Commande introuvable'], 404);
+        }
+
+        $items = [];
+        foreach ($order->getOrderItems() as $item) {
+            $items[] = [
+                'id' => $item->getId(),
+                'quantity' => $item->getQuantity(),
+                'product' => [
+                    'id' => $item->getProduct()->getId(),
+                    'name' => $item->getProduct()->getName(),
+                    'price' => $item->getProduct()->getPrice(),
+                    'image' => $item->getProduct()->getImage(),
+                ]
+            ];
+        }
+
+        $shipping = $order->getShippingAddress();
+        return $this->json([
+            'order' => [
+                'id' => $order->getId(),
+                'date' => $order->getDate()->format('Y-m-d H:i:s'),
+                'total' => $order->getTotal(),
+                'shippingAddress' => [
+                    'street' => $shipping->getShippingStreet(),
+                    'city' => $shipping->getShippingCity(),
+                    'postalCode' => $shipping->getShippingPostalCode(),
+                ],
+                'billingAddress' => [
+                    'street' => $shipping->getBillingStreet(),
+                    'city' => $shipping->getBillingCity(),
+                    'postalCode' => $shipping->getBillingPostalCode(),
+                ],
+                'items' => $items,
+            ]
+        ]);
+    }
+
     #[Route('/api/cart/confirm-order', name: 'cart_confirm_order', methods: ['POST'])]
     public function confirmOrder(
         Request $request,
@@ -184,6 +235,9 @@ class OrderController extends AbstractController
         }
         $em->flush();
 
-        return $this->json(['message' => 'Commande créée avec succès']);
+        return $this->json([
+            'message' => 'Commande créée avec succès',
+            'orderId' => $order->getId()
+        ]);
     }
 }

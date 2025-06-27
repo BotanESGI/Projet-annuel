@@ -1,3 +1,109 @@
+<script setup>
+import { ref, onMounted, nextTick } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+import AlertMessage from '@/components/AlertMessage.vue'
+import { loadStripe } from '@stripe/stripe-js'
+
+const stripePromise = loadStripe('pk_test_51PX6nWRv1OMvXsRI1VbdcKh5DeMOtqWP3vP7T2KHGJD1SQkNvv1ZxroKuVQyBJWBshm0PxgZfzaDxkWOToiRQo3B00K1w4H7Si')
+
+const router = useRouter()
+const addresses = ref([])
+const selectedAddressId = ref(null)
+const selectedBillingAddressId = ref(null)
+const loadingAddresses = ref(true)
+const loadingPay = ref(false)
+const error = ref('')
+const clientSecret = ref(null)
+const cardComplete = ref(false)
+const step = ref(1)
+let elements = null
+let cardElement = null
+
+onMounted(async () => {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  try {
+    const res = await axios.get('/api/addresses', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    addresses.value = res.data.addresses
+    const def = addresses.value.find(a => a.isDefault)
+    if (def) selectedAddressId.value = def.id
+    const defBilling = addresses.value.find(a => a.isDefaultBilling)
+    if (defBilling) selectedBillingAddressId.value = defBilling.id
+  } catch (e) {
+    error.value = "Impossible de charger les adresses."
+  } finally {
+    loadingAddresses.value = false
+  }
+})
+
+const goToStep2 = async () => {
+  step.value = 2
+  await nextTick()
+  const stripe = await stripePromise
+  elements = stripe.elements()
+  cardElement = elements.create('card')
+  cardElement.on('change', (event) => {
+    cardComplete.value = event.complete
+    if (event.error) {
+      error.value = event.error.message
+    } else {
+      error.value = ''
+    }
+  })
+  cardElement.mount('#card-element')
+}
+
+const confirmPayment = async () => {
+  loadingPay.value = true
+  error.value = ''
+  try {
+    const res = await axios.post('/api/cart/payment-intent', {
+      shippingAddressId: selectedAddressId.value,
+      billingAddressId: selectedBillingAddressId.value
+    }, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+    clientSecret.value = res.data.clientSecret
+
+    const stripe = await stripePromise
+    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret.value, {
+      payment_method: {
+        card: cardElement,
+      }
+    })
+    if (stripeError) {
+      error.value = stripeError.message
+      return
+    }
+    if (!paymentIntent || paymentIntent.status !== 'succeeded') {
+      error.value = "Le paiement n'a pas pu être confirmé. Veuillez réessayer."
+      return
+    }
+
+    const confirmRes = await axios.post('/api/cart/confirm-order', {
+      shippingAddressId: selectedAddressId.value,
+      billingAddressId: selectedBillingAddressId.value,
+      paymentIntentId: paymentIntent.id
+    }, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+
+    sessionStorage.setItem('orderConfirmedId', confirmRes.data.orderId)
+    router.push(`/order/${confirmRes.data.orderId}/confirmation`)
+  } catch (e) {
+    error.value = e.response?.data?.message || "Erreur lors du paiement ou de la commande."
+  } finally {
+    loadingPay.value = false
+  }
+}
+</script>
+
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
     <div class="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8">
@@ -116,111 +222,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import AlertMessage from '@/components/AlertMessage.vue'
-import { loadStripe } from '@stripe/stripe-js'
-
-const stripePromise = loadStripe('pk_test_51PX6nWRv1OMvXsRI1VbdcKh5DeMOtqWP3vP7T2KHGJD1SQkNvv1ZxroKuVQyBJWBshm0PxgZfzaDxkWOToiRQo3B00K1w4H7Si')
-
-const router = useRouter()
-const addresses = ref([])
-const selectedAddressId = ref(null)
-const selectedBillingAddressId = ref(null)
-const loadingAddresses = ref(true)
-const loadingPay = ref(false)
-const error = ref('')
-const clientSecret = ref(null)
-const cardComplete = ref(false)
-const step = ref(1)
-let elements = null
-let cardElement = null
-
-onMounted(async () => {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    router.push('/login')
-    return
-  }
-  try {
-    const res = await axios.get('/api/addresses', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    addresses.value = res.data.addresses
-    const def = addresses.value.find(a => a.isDefault)
-    if (def) selectedAddressId.value = def.id
-    const defBilling = addresses.value.find(a => a.isDefaultBilling)
-    if (defBilling) selectedBillingAddressId.value = defBilling.id
-  } catch (e) {
-    error.value = "Impossible de charger les adresses."
-  } finally {
-    loadingAddresses.value = false
-  }
-})
-
-const goToStep2 = async () => {
-  step.value = 2
-  await nextTick()
-  const stripe = await stripePromise
-  elements = stripe.elements()
-  cardElement = elements.create('card')
-  cardElement.on('change', (event) => {
-    cardComplete.value = event.complete
-    if (event.error) {
-      error.value = event.error.message
-    } else {
-      error.value = ''
-    }
-  })
-  cardElement.mount('#card-element')
-}
-
-const confirmPayment = async () => {
-  loadingPay.value = true
-  error.value = ''
-  try {
-    const res = await axios.post('/api/cart/payment-intent', {
-      shippingAddressId: selectedAddressId.value,
-      billingAddressId: selectedBillingAddressId.value
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    })
-    clientSecret.value = res.data.clientSecret
-
-    const stripe = await stripePromise
-    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret.value, {
-      payment_method: {
-        card: cardElement,
-      }
-    })
-    if (stripeError) {
-      error.value = stripeError.message
-      return
-    }
-    if (!paymentIntent || paymentIntent.status !== 'succeeded') {
-      error.value = "Le paiement n'a pas pu être confirmé. Veuillez réessayer."
-      return
-    }
-
-    await axios.post('/api/cart/confirm-order', {
-      shippingAddressId: selectedAddressId.value,
-      billingAddressId: selectedBillingAddressId.value,
-      paymentIntentId: paymentIntent.id
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    })
-
-    router.push('/orders?success=1')
-  } catch (e) {
-    error.value = e.response?.data?.message || "Erreur lors du paiement ou de la commande."
-  } finally {
-    loadingPay.value = false
-  }
-}
-</script>
 
 <style scoped>
 .loader, .loader-btn {
