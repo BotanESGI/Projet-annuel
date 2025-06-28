@@ -102,7 +102,7 @@ const routes = [
     },
     {
         path: '/checkout',
-        name: 'Tunne de commande',
+        name: 'Tunnel de commande',
         component: Checkout,
         meta: { requiresAuth: true, fromCartOnly: true }
     },
