@@ -15,6 +15,7 @@ import ProductDetail from '../views/ProductDetail.vue'
 import Cart from '../views/Cart.vue'
 import Checkout from '../views/Checkout.vue'
 import OrderConfirmation from '../views/OrderConfirmation.vue'
+import OrderDetail from '../views/OrderDetail.vue'
 
 const routes = [
     {
@@ -110,6 +111,12 @@ const routes = [
         path: '/order/:id/confirmation',
         name: 'Confirmation de commande',
         component: OrderConfirmation,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/orders/:id',
+        name: 'OrderDetail',
+        component: () => OrderDetail,
         meta: { requiresAuth: true }
     }
 ]

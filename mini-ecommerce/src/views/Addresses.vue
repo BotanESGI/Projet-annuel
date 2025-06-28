@@ -1,16 +1,17 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl w-full space-y-8">
-      <h2 class="text-center text-3xl font-extrabold text-gray-900">Mes adresses</h2>
       <AlertMessage :message="success" type="success" />
       <AlertMessage :message="error" type="error" />
-      <div v-if="isLoading" class="flex justify-center">
-        <svg class="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center w-full">
+        <svg class="animate-spin h-12 w-12 text-green-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
+        <p class="mt-4 text-green-600 font-semibold">Chargement des adresses...</p>
       </div>
       <div v-else>
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">Mes adresses</h2>
         <div v-if="addresses.length === 0" class="bg-white rounded-lg shadow p-6 text-center">
           <p class="text-gray-500 mb-4">Vous n'avez pas encore d'adresse enregistrée.</p>
           <button
@@ -34,7 +35,7 @@
               </select>
               <button
                   @click="openAddressModal()"
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -203,7 +204,7 @@
           <button
               type="submit"
               :disabled="isLoadingAction || (postalCodeError !== '' && postalCodeTouched)"
-              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isLoadingAction" class="absolute left-0 inset-y-0 flex items-center pl-3">
               <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
