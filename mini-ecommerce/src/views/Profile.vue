@@ -1,7 +1,14 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
-      <h2 class="text-center text-3xl font-extrabold text-gray-900">Mon compte</h2>
+    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full">
+      <svg class="animate-spin h-12 w-12 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="mt-4 text-blue-600 font-semibold">Chargement du profil...</p>
+    </div>
+    <div v-else class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+      <h2 class="text-center text-3xl font-extrabold text-gray-900">Mon profil</h2>
       <AlertMessage :message="success" type="success" />
       <AlertMessage :message="error" type="error" />
       <form class="mt-8 space-y-6" @submit.prevent="mettreAJourCompte">
@@ -49,18 +56,10 @@
         <button
             type="submit"
             :disabled="isLoading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full block py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
           {{ isLoading ? 'Chargement...' : 'Mettre à jour' }}
         </button>
-
-        <!-- Ajouter après le bouton de mise à jour, à l'intérieur du formulaire -->
         <div class="mt-8 border-t pt-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer mon compte</h3>
           <div class="space-y-4">
@@ -109,18 +108,15 @@ const isLoading = ref(true)
 onMounted(async () => {
   try {
     const token = localStorage.getItem('token');
-
     const res = await axios.get('/api/account', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-
     nom.value = res.data.user.nom
     lastname.value = res.data.user.lastname
     email.value = res.data.user.email
   } catch (err) {
-    console.error("Erreur:", err.response?.data)
     error.value = "Impossible de charger les informations."
   } finally {
     isLoading.value = false
@@ -129,18 +125,15 @@ onMounted(async () => {
 
 const mettreAJourCompte = async () => {
   if (isLoading.value) return
-
   success.value = ''
   error.value = ''
   isLoading.value = true
-
   try {
     const data = {
       nom: nom.value,
       lastname: lastname.value
     }
     if (password.value) data.password = password.value
-
     const res = await axios.put('/api/account', data, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
@@ -159,9 +152,7 @@ const mettreAJourCompte = async () => {
 
 const deleteAccount = async (type) => {
   if (isLoading.value) return
-
   const confirmMessage = "Pour confirmer la suppression définitive de votre compte, veuillez taper 'SUPPRIMER'";
-
   const confirmation = prompt(confirmMessage);
   if (confirmation !== 'SUPPRIMER') {
     if (confirmation !== null) {
@@ -169,20 +160,16 @@ const deleteAccount = async (type) => {
     }
     return;
   }
-
   success.value = '';
   error.value = '';
   isLoading.value = true;
-
   try {
     await axios.delete(`/api/account/delete/${type}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
-
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.dispatchEvent(new Event('auth-changed'));
-
     window.location.href = '/';
   } catch (err) {
     error.value = err.response?.data?.errors?.general || `Erreur lors de la ${type === 'soft' ? 'désactivation' : 'suppression'} du compte.`;
@@ -195,7 +182,6 @@ const deleteAccount = async (type) => {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
