@@ -6,7 +6,9 @@
     <div v-else>
       <div class="mb-4">
         <p class="mb-1 text-black">Numéro de commande : <b class="text-black">{{ order.id }}</b></p>
-        <p class="text-black">Date : {{ new Date(order.date).toLocaleString() }}</p>
+        <p class="text-black">
+          Date : {{ new Date(order.date.replace(' ', 'T')).toLocaleString() }}
+        </p>
       </div>
       <h3 class="mt-6 font-semibold text-lg text-black">Produits commandés</h3>
       <ul class="divide-y divide-gray-200 mb-6">
@@ -20,13 +22,13 @@
               {{ item.product.name }}
             </router-link>
             <div class="text-gray-500 text-sm mt-1">
-              Prix unitaire : <span class="text-black">{{ item.product.price.toFixed(2) }} €</span>
+              Prix unitaire : <span class="text-black">{{ item.product.price.toFixed(2) }} €</span>
             </div>
             <div class="text-gray-500 text-sm">
               Quantité : <span class="text-black">{{ item.quantity }}</span>
             </div>
             <div class="text-gray-700 font-medium mt-1">
-              Sous-total : <span class="text-black">{{ (item.product.price * item.quantity).toFixed(2) }} €</span>
+              Sous-total : <span class="text-black">{{ (item.product.price * item.quantity).toFixed(2) }} €</span>
             </div>
           </div>
         </li>
@@ -49,9 +51,21 @@
       </div>
       <div class="mt-4 font-bold text-lg flex justify-between">
         <span class="text-black">Total :</span>
-        <span class="text-black">{{ order.total.toFixed(2) }} €</span>
+        <span class="text-black">{{ order.total.toFixed(2) }} €</span>
       </div>
-      <router-link to="/orders" class="mt-8 inline-block text-blue-600 underline">Voir mes commandes</router-link>
+      <div class="mt-8 flex flex-col gap-4">
+        <router-link to="/orders" class="inline-block text-blue-600 underline">
+          Voir mes commandes
+        </router-link>
+        <button
+            v-if="order.invoiceId"
+            @click="downloadInvoice"
+            class="inline-block text-blue-600 underline text-left cursor-pointer"
+            type="button"
+        >
+          Télécharger la facture
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -67,6 +81,32 @@ const route = useRoute()
 const order = ref({})
 const loading = ref(true)
 const error = ref('')
+
+const downloadInvoice = async () => {
+  try {
+    loading.value = true
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`/api/invoices/${order.value.invoiceId}/download`, {
+      headers: {Authorization: `Bearer ${token}`},
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `facture-${order.value.id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(link)
+  } catch (e) {
+    error.value = "Erreur lors du téléchargement de la facture"
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(async () => {
   const confirmedId = sessionStorage.getItem('orderConfirmedId')

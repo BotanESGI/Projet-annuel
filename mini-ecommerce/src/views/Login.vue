@@ -117,6 +117,7 @@ const connexion = async () => {
 
     localStorage.setItem('token', response.data.token)
     localStorage.setItem('userId', response.data.userId)
+    localStorage.setItem('userLastName', response.data.userLastName);
     localStorage.setItem('userName', response.data.userName);
 
     window.dispatchEvent(new Event('auth-changed'))

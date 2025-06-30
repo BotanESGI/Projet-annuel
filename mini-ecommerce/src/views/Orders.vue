@@ -46,6 +46,17 @@
                   </svg>
                   Détails
                 </router-link>
+                <button
+                    v-if="order.invoiceId"
+                    @click="downloadInvoice(order.id, order.invoiceId)"
+                    class="inline-flex items-center px-5 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:white transition"
+                    type="button"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Facture
+                </button>
               </div>
             </div>
           </div>
@@ -123,6 +134,32 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+const downloadInvoice = async (orderId, invoiceId) => {
+  try {
+    isLoading.value = true
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`/api/invoices/${invoiceId}/download`, {
+      headers: {Authorization: `Bearer ${token}`},
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `facture-${orderId}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(link)
+  } catch (err) {
+    error.value = "Erreur lors du téléchargement de la facture"
+    console.error(err)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const showOrderDetails = async (orderId) => {
   const token = localStorage.getItem('token')

@@ -23,6 +23,9 @@ class JWTAuthenticationSuccessHandler extends AuthenticationSuccessHandler
         if ($user instanceof UserInterface && method_exists($user, 'getName')) {
             $data['userName'] = $user->getName();
         }
+        if ($user instanceof UserInterface && method_exists($user, 'getLastname')) {
+            $data['userLastName'] = $user->getLastname();
+        }
 
         return new JsonResponse($data);
     }

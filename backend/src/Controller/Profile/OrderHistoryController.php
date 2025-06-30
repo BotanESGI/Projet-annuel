@@ -34,6 +34,7 @@ class OrderHistoryController extends AbstractController
                 'date' => $order->getDate()?->format('Y-m-d H:i:s'),
                 'total' => $order->getTotal(),
                 'itemsCount' => $itemsCount,
+                'invoiceId' => $order->getInvoice() ? $order->getInvoice()->getId() : null
             ];
         }
 
