@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Security;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use App\Entity\Invoice;
 
 class OrderController extends AbstractController
 {
@@ -120,6 +121,7 @@ class OrderController extends AbstractController
                 'id' => $order->getId(),
                 'date' => $order->getDate()->format('Y-m-d H:i:s'),
                 'total' => $order->getTotal(),
+                'invoiceId' => $order->getInvoice() ? $order->getInvoice()->getId() : null,
                 'shippingAddress' => [
                     'street' => $shipping->getShippingStreet(),
                     'city' => $shipping->getShippingCity(),
@@ -139,7 +141,8 @@ class OrderController extends AbstractController
     public function confirmOrder(
         Request $request,
         EntityManagerInterface $em,
-        Security $security
+        Security $security,
+        InvoiceController $invoiceController
     ): JsonResponse {
         $user = $security->getUser();
         if (!$user) {
@@ -223,16 +226,39 @@ class OrderController extends AbstractController
             $orderItem->setOrder($order);
             $orderItem->setProduct($cartItem->getProduct());
             $orderItem->setQuantity($cartItem->getQuantity());
+            $orderItems[] = $orderItem;
             $order->addOrderItem($orderItem);
             $em->persist($orderItem);
             $total += $cartItem->getProduct()->getPrice() * $cartItem->getQuantity();
         }
+
         $order->setTotal($total);
         $em->persist($order);
 
         foreach ($cart->getItems() as $item) {
             $em->remove($item);
         }
+
+        $invoice = new Invoice();
+        $invoice->setTotalAmount($total);
+        $invoice->setUser($user);
+        $invoice->setOrder($order);
+        $invoice->setPaymentId($paymentIntentId);
+
+        $order->setInvoice($invoice);
+
+        $em->persist($invoice);
+        $em->persist($order);
+        $em->flush();
+
+        $pdfResponse = $invoiceController->generateInvoicePdf($invoice, $orderItems);
+
+        if ($pdfResponse->getStatusCode() === 200) {
+            $pdfData = json_decode($pdfResponse->getContent(), true);
+            $invoice->setPdfPath($pdfData['path']);
+        }
+
+        $em->persist($invoice);
         $em->flush();
 
         return $this->json([

@@ -31,6 +31,8 @@ class Invoice
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $pdfPath = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $paymentId = null;
 
     public function getId(): ?int
     {
@@ -78,6 +80,17 @@ class Invoice
     public function setPdfPath(?string $pdfPath): static
     {
         $this->pdfPath = $pdfPath;
+        return $this;
+    }
+
+    public function getPaymentId(): ?string
+    {
+        return $this->paymentId;
+    }
+
+    public function setPaymentId(?string $paymentId): static
+    {
+        $this->paymentId = $paymentId;
         return $this;
     }
 }

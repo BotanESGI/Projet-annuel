@@ -3,7 +3,7 @@
     <div class="bg-white text-center text-gray-800 p-8 rounded-lg mb-8 shadow-md">
       <h1 class="text-4xl font-bold mb-2">Bienvenue</h1>
       <p class="text-xl mt-2">
-        <span v-if="user">Bonjour, <span class="font-bold text-gray-600">{{ user.name }} {{ user.lastname }}</span> !</span>
+        <span v-if="userLastName">Bonjour, <span class="font-bold text-gray-600">{{ userName }} {{ userLastName }}</span> !</span>
         <span v-else>Créer un compte et rejoignez-nous !</span>
       </p>
     </div>
@@ -145,7 +145,8 @@ const data = ref({
   mostSoldProducts: [],
   latestProducts: []
 })
-const user = ref(null)
+const userName = ref('')
+const userLastName = ref('')
 
 function isNotEmpty(obj) {
   return obj && typeof obj === 'object' && Object.keys(obj).length > 0 && obj.id
@@ -157,6 +158,8 @@ function filterProducts(products) {
 }
 
 onMounted(async () => {
+  userName.value = localStorage.getItem('userName') || ''
+  userLastName.value = localStorage.getItem('userLastName') || ''
   loading.value = true
   try {
     const recentIds = JSON.parse(localStorage.getItem('recentlyViewedProducts') || '[]')
