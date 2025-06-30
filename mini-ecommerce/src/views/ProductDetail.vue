@@ -482,6 +482,20 @@ export default {
         await fetchProductData();
         await fetchReviews();
         await checkPurchaseStatus();
+
+        const id = productId.value;
+        if (id) {
+          const recentlyViewedProducts = JSON.parse(localStorage.getItem('recentlyViewedProducts') || '[]');
+          const index = recentlyViewedProducts.indexOf(Number(id));
+          if (index > -1) {
+            recentlyViewedProducts.splice(index, 1);
+          }
+          recentlyViewedProducts.unshift(Number(id));
+          if (recentlyViewedProducts.length > 10) {
+            recentlyViewedProducts.pop();
+          }
+          localStorage.setItem('recentlyViewedProducts', JSON.stringify(recentlyViewedProducts));
+        }
       }
     });
 
