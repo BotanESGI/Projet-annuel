@@ -16,6 +16,7 @@ import Cart from '../views/Cart.vue'
 import Checkout from '../views/Checkout.vue'
 import OrderConfirmation from '../views/OrderConfirmation.vue'
 import OrderDetail from '../views/OrderDetail.vue'
+import Home from '../views/Home.vue'
 
 const routes = [
     {
@@ -118,6 +119,11 @@ const routes = [
         name: 'OrderDetail',
         component: () => OrderDetail,
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/',
+        name: 'Accueil',
+        component: () => Home,
     }
 ]
 
