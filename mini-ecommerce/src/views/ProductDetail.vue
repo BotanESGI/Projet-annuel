@@ -63,6 +63,23 @@
         </div>
         <div class="text-black mb-4">
           <p>Produit ajouté le : {{ formatDate(product.createdAt) }}</p>
+          <div class="flex items-center mb-2 min-h-[28px]">
+            <template v-if="loadingReviews">
+              <span class="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span class="text-gray-500 text-sm">Chargement de la note...</span>
+            </template>
+            <template v-else>
+              <span v-for="i in 5" :key="i" class="text-xl">
+                <span :class="i <= Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-300'">★</span>
+              </span>
+                <span class="ml-2 text-sm text-gray-600" v-if="reviews.length > 0">
+                {{ averageRating.toFixed(1) }} / 5 ({{ reviews.filter(r => r.status === 'VALIDATED').length }} avis)
+                </span>
+              <span class="ml-2 text-sm text-gray-600" v-else>
+                Pas encore d'avis
+              </span>
+            </template>
+          </div>
         </div>
         <p class="text-lg font-semibold text-black mb-4">{{ formatPrice(product.price) }} €</p>
         <div class="flex items-center mb-4">
@@ -529,6 +546,15 @@ export default {
       return parseFloat(price).toFixed(2).replace('.', ',');
     };
 
+    const averageRating = computed(() => {
+      if (!reviews.value.length) return 0;
+      const sum = reviews.value
+          .filter(r => r.status === 'VALIDATED')
+          .reduce((acc, r) => acc + r.rating, 0);
+      const count = reviews.value.filter(r => r.status === 'VALIDATED').length;
+      return count ? (sum / count) : 0;
+    });
+
     const formatKey = (key) => {
       return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
     };
@@ -615,7 +641,8 @@ export default {
       submitEditReview,
       deletingReviewId,
       cartMessage,
-      cartMessageType
+      cartMessageType,
+      averageRating
     };
   }
 }
