@@ -122,11 +122,53 @@
         </div>
       </div>
     </div>
+
+    <div v-if="data.tags && data.tags.length" class="mt-8">
+      <h3 class="text-black font-semibold mb-2">Tags</h3>
+      <div class="flex gap-2 flex-wrap mb-4">
+        <button
+            v-for="tag in data.tags"
+            :key="tag.id"
+            class="px-4 py-1 rounded-full text-white text-sm font-medium"
+            :style="{ backgroundColor: tag.color, opacity: selectedTag === tag.id ? 1 : 0.7 }"
+            @click="fetchTagProducts(tag.id)"
+        >
+          {{ tag.name }}
+        </button>
+      </div>
+      <div v-if="selectedTag">
+        <div v-if="loadingTagProducts" class="flex justify-center items-center py-4">
+          <div
+              class="loader border-4 border-t-transparent rounded-full w-8 h-8 animate-spin mr-2"
+              :style="{ borderColor: selectedTagColor, borderTopColor: 'transparent', borderLeftColor: selectedTagColor }"
+          ></div>
+          <span class="font-medium" :style="{ color: selectedTagColor }">Chargement...</span>
+        </div>
+        <div v-else>
+          <div v-if="tagProducts.length" class="flex gap-5 overflow-x-auto py-2">
+            <div v-for="p in tagProducts" :key="p.id"
+                 class="flex-none w-60 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-md">
+              <a :href="'/product/' + p.id"
+                 :title="'Cliquer ici pour en savoir plus sur l\'article ' + p.name"
+                 tabindex="0">
+                <img :src="p.image || '/images/blank.jpg'" :alt="p.name" class="w-full h-40 object-cover bg-gray-100" />
+                <div class="p-3">
+                  <h3 class="text-gray-900 text-lg font-medium truncate mb-1">{{ p.name }}</h3>
+                  <p class="text-sm text-gray-500 truncate mb-1">{{ p.description }}</p>
+                  <strong class="text-gray-900 font-bold">Prix : {{ p.price }} €</strong>
+                </div>
+              </a>
+            </div>
+          </div>
+          <p v-else class="text-gray-500 italic">Aucun produit pour ce tag.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const tabs = [
   { key: 'recentlyViewed', label: 'Récemment Consultés' },
@@ -143,10 +185,34 @@ const data = ref({
   cheapestProduct: [],
   recentlyViewedProducts: [],
   mostSoldProducts: [],
-  latestProducts: []
+  latestProducts: [],
+  tags: []
 })
 const userName = ref('')
 const userLastName = ref('')
+const selectedTag = ref(null)
+const tagProducts = ref([])
+const loadingTagProducts = ref(false)
+
+const selectedTagColor = computed(() => {
+  const tag = data.value.tags.find(t => t.id === selectedTag.value)
+  return tag ? tag.color : '#3b82f6'
+})
+
+async function fetchTagProducts(tagId) {
+  selectedTag.value = tagId
+  loadingTagProducts.value = true
+  tagProducts.value = []
+  try {
+    const res = await fetch(`/api/products?tags.id=${tagId}`)
+    const result = await res.json()
+    tagProducts.value = result['hydra:member'] || []
+  } catch (e) {
+    tagProducts.value = []
+  } finally {
+    loadingTagProducts.value = false
+  }
+}
 
 function isNotEmpty(obj) {
   return obj && typeof obj === 'object' && Object.keys(obj).length > 0 && obj.id
@@ -187,6 +253,11 @@ onMounted(async () => {
       latestProducts: Array.isArray(result.latestProducts)
           ? result.latestProducts.filter(isNotEmpty)
           : [],
+      tags: Array.isArray(result.tags) ? result.tags : []
+    }
+
+    if (data.value.tags.length > 0) {
+      await fetchTagProducts(data.value.tags[0].id)
     }
 
   } catch (e) {
@@ -196,7 +267,8 @@ onMounted(async () => {
       cheapestProduct: [],
       recentlyViewedProducts: [],
       mostSoldProducts: [],
-      latestProducts: []
+      latestProducts: [],
+      tags: []
     }
   } finally {
     loading.value = false
