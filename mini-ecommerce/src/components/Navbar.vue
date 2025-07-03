@@ -15,6 +15,15 @@
             <span>Accueil</span>
           </router-link>
 
+          <router-link
+              v-if="isAuthenticated && isAdmin"
+              to="/backoffice"
+              class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200"
+          >
+            <font-awesome-icon icon="cog" />
+            <span>Back office</span>
+          </router-link>
+
           <router-link to="/products" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="box-open" />
             <span>Nos produits</span>
@@ -164,6 +173,14 @@
         <font-awesome-icon icon="home" />
         <span>Accueil</span>
       </router-link>
+      <router-link
+          v-if="isAuthenticated && isAdmin"
+          to="/backoffice"
+          class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200"
+      >
+        <font-awesome-icon icon="cog" />
+        <span>Back office</span>
+      </router-link>
       <router-link to="/products" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
         <font-awesome-icon icon="box-open" />
         <span>Nos produits</span>
@@ -213,6 +230,15 @@ const loadingCart = ref(false)
 const updatingItemId = ref(null)
 const removingItemId = ref(null)
 const router = useRouter()
+
+const isAdmin = computed(() => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('roles') || '[]')
+    return roles.includes('ROLE_ADMIN')
+  } catch {
+    return false
+  }
+})
 
 const checkAuth = () => {
   isAuthenticated.value = !!(localStorage.getItem('userName') && localStorage.getItem('userLastName'))

@@ -17,6 +17,7 @@ import Checkout from '../views/Checkout.vue'
 import OrderConfirmation from '../views/OrderConfirmation.vue'
 import OrderDetail from '../views/OrderDetail.vue'
 import Home from '../views/Home.vue'
+import Backoffice from '../views/Backoffice.vue'
 
 const routes = [
     {
@@ -124,7 +125,13 @@ const routes = [
         path: '/',
         name: 'Accueil',
         component: () => Home,
-    }
+    },
+    {
+        path: '/backoffice',
+        name: 'Backoffice',
+        component: Backoffice,
+        meta: { requiresAuth: true }
+    },
 ]
 
 const router = createRouter({
@@ -144,6 +151,9 @@ router.beforeEach((to, from, next) => {
     }
     else if (to.meta.fromCartOnly && from.path !== '/cart') {
         next({ path: '/cart' })
+    }
+    else if (to.path === '/backoffice' && !JSON.parse(localStorage.getItem('roles') || '[]').includes('ROLE_ADMIN')) {
+        next({ path: '/' })
     }
     else {
         next()
