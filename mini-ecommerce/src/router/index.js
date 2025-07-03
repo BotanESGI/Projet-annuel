@@ -18,6 +18,7 @@ import OrderConfirmation from '../views/OrderConfirmation.vue'
 import OrderDetail from '../views/OrderDetail.vue'
 import Home from '../views/Home.vue'
 import Backoffice from '../views/Backoffice.vue'
+import AdminProducts from '../views/Admin/AdminProducts.vue'
 
 const routes = [
     {
@@ -130,6 +131,12 @@ const routes = [
         path: '/backoffice',
         name: 'Backoffice',
         component: Backoffice,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/products',
+        name: 'AdminProduits',
+        component: AdminProducts,
         meta: { requiresAuth: true }
     },
 ]

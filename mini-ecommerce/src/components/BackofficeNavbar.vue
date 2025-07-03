@@ -9,43 +9,43 @@
         <font-awesome-icon icon="tachometer-alt" />
         <span>Tableau de bord</span>
       </router-link>
-      <router-link to="/admin/products" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/products" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="box-open" />
         <span>Produits</span>
       </router-link>
-      <router-link to="/admin/orders" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/orders" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="shopping-cart" />
         <span>Commandes</span>
       </router-link>
-      <router-link to="/admin/invoices" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/invoices" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="file-invoice" />
         <span>Factures</span>
       </router-link>
-      <router-link to="/admin/cart" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/cart" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="shopping-basket" />
         <span>Panier</span>
       </router-link>
-      <router-link to="/admin/users" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/users" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="users" />
         <span>Utilisateurs</span>
       </router-link>
-      <router-link to="/admin/addresses" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/addresses" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="map-marker-alt" />
         <span>Adresses</span>
       </router-link>
-      <router-link to="/admin/categories" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/categories" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="tags" />
         <span>Catégories</span>
       </router-link>
-      <router-link to="/admin/reviews" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/reviews" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="star" />
         <span>Avis</span>
       </router-link>
-      <router-link to="/admin/tags" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/tags" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="tag" />
         <span>Tags</span>
       </router-link>
-      <router-link to="/admin/" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="arrow-left" />
         <span>Retour au site</span>
       </router-link>
