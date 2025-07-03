@@ -119,6 +119,7 @@ const connexion = async () => {
     localStorage.setItem('userId', response.data.userId)
     localStorage.setItem('userLastName', response.data.userLastName);
     localStorage.setItem('userName', response.data.userName);
+    localStorage.setItem('roles', JSON.stringify(response.data.roles));
 
     window.dispatchEvent(new Event('auth-changed'))
     success.value = 'Connexion réussie ! Redirection...'

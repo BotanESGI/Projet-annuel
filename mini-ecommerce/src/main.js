@@ -5,11 +5,51 @@ import App from './App.vue'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart, faRightToBracket, faUserPlus, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
-library.add(faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart, faRightToBracket, faUserPlus, faRightFromBracket)
-import router from './router'
+import {
+    faHome,
+    faBoxOpen,
+    faInfoCircle,
+    faEnvelope,
+    faUser,
+    faShoppingCart,
+    faRightToBracket,
+    faUserPlus,
+    faRightFromBracket,
+    faCog,
+    faTachometerAlt,
+    faFileInvoice,
+    faShoppingBasket,
+    faUsers,
+    faMapMarkerAlt,
+    faTags,
+    faTag,
+    faStar,
+    faArrowLeft
+} from '@fortawesome/free-solid-svg-icons'
 
-library.add(faHome, faBoxOpen, faInfoCircle, faEnvelope, faUser, faShoppingCart)
+library.add(
+    faHome,
+    faBoxOpen,
+    faInfoCircle,
+    faEnvelope,
+    faUser,
+    faShoppingCart,
+    faRightToBracket,
+    faUserPlus,
+    faRightFromBracket,
+    faCog,
+    faTachometerAlt,
+    faFileInvoice,
+    faShoppingBasket,
+    faUsers,
+    faMapMarkerAlt,
+    faTags,
+    faTag,
+    faStar,
+    faArrowLeft
+)
+
+import router from './router'
 
 const app = createApp(App)
 
