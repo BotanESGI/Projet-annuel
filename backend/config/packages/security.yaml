@@ -41,4 +41,6 @@ security:
         - { path: ^/api/reviews/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/home, roles: PUBLIC_ACCESS }
         - { path: ^/api/orders, roles: ROLE_ADMIN }
+        - { path: ^/api/tags, methods: [ GET ], roles: PUBLIC_ACCESS }
+        - { path: ^/api/upload, roles: ROLE_ADMIN }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY  }
