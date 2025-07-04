@@ -10,7 +10,17 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(security: "is_granted('ROLE_ADMIN')", normalizationContext: ['groups' => ['address:read']]),
+        new Get(security: "is_granted('ROLE_ADMIN')", normalizationContext: ['groups' => ['address:read']])
+    ]
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -18,12 +28,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['review:user:read'])]
+    #[Groups(['review:user:read', 'address:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: "L'email ne doit pas être vide.")]
     #[Assert\Email(message: "L'email '{{ value }}' n'est pas un email valide.")]
+    #[Groups(['review:user:read', 'address:read'])]
     private ?string $email = null;
 
 
@@ -54,13 +65,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le champ nom ne doit pas être vide.")]
     #[Assert\Length(min: 3, minMessage: "Le nom doit contenir au moins {{ limit }} caractères.")]
-    #[Groups(['review:read', 'review:user:read'])]
+    #[Groups(['review:read', 'review:user:read', 'address:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le champ prénom ne doit pas être vide.")]
     #[Assert\Length(min: 3, minMessage: "Le prénom doit contenir au moins {{ limit }} caractères.")]
-    #[Groups(['review:read', 'review:user:read'])]
+    #[Groups(['review:read', 'review:user:read', 'address:read'])]
     private ?string $lastname = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]

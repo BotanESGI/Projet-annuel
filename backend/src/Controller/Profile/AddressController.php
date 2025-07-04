@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[AsController]
 class AddressController
 {
-    #[Route('/api/addresses', name: 'addresses_get', methods: ['GET'])]
+    #[Route('/api/addresses_front', name: 'addresses_get', methods: ['GET'])]
     public function getAddresses(#[CurrentUser] ?User $user, EntityManagerInterface $em): JsonResponse
     {
         if (!$user) {
@@ -41,7 +41,7 @@ class AddressController
         return new JsonResponse(['addresses' => $formattedAddresses]);
     }
 
-    #[Route('/api/addresses', name: 'addresses_post', methods: ['POST'])]
+    #[Route('/api/addresses_front', name: 'addresses_post', methods: ['POST'])]
     public function createAddress(
         Request $request,
         EntityManagerInterface $em,
@@ -139,7 +139,7 @@ class AddressController
         }
     }
 
-    #[Route('/api/addresses/{id}', name: 'addresses_put', methods: ['PUT'])]
+    #[Route('/api/addresses_front/{id}', name: 'addresses_put', methods: ['PUT'])]
     public function updateAddress(
         int $id,
         Request $request,
@@ -236,7 +236,7 @@ class AddressController
         }
     }
 
-    #[Route('/api/addresses/{id}', name: 'addresses_delete', methods: ['DELETE'])]
+    #[Route('/api/addresses_front/{id}', name: 'addresses_delete', methods: ['DELETE'])]
     public function deleteAddress(
         int $id,
         EntityManagerInterface $em,
@@ -285,7 +285,7 @@ class AddressController
         }
     }
 
-    #[Route('/api/addresses/{id}/default', name: 'address_set_default', methods: ['PUT'])]
+    #[Route('/api/addresses_front/{id}/default', name: 'address_set_default', methods: ['PUT'])]
     public function setDefaultAddress(
         int $id,
         EntityManagerInterface $em,
@@ -330,7 +330,7 @@ class AddressController
         }
     }
 
-    #[Route('/api/addresses/{id}/default-billing', name: 'address_set_default_billing', methods: ['PUT'])]
+    #[Route('/api/addresses_front/{id}/default-billing', name: 'address_set_default_billing', methods: ['PUT'])]
     public function setDefaultBillingAddress(
         int $id,
         EntityManagerInterface $em,

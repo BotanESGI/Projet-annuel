@@ -19,6 +19,7 @@ import OrderDetail from '../views/OrderDetail.vue'
 import Home from '../views/Home.vue'
 import Backoffice from '../views/Backoffice.vue'
 import AdminProducts from '../views/Admin/AdminProducts.vue'
+import AdminAddresses from '../views/Admin/AdminAddresses.vue'
 
 const routes = [
     {
@@ -118,7 +119,7 @@ const routes = [
     },
     {
         path: '/orders/:id',
-        name: 'OrderDetail',
+        name: 'Détail de la commande',
         component: () => OrderDetail,
         meta: { requiresAuth: true }
     },
@@ -129,14 +130,20 @@ const routes = [
     },
     {
         path: '/backoffice',
-        name: 'Backoffice',
+        name: 'Back Office',
         component: Backoffice,
         meta: { requiresAuth: true }
     },
     {
         path: '/backoffice/products',
-        name: 'AdminProduits',
+        name: 'Admin Gestion des Produits',
         component: AdminProducts,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/addresses',
+        name: 'Admin Gestion des Adresses',
+        component: AdminAddresses,
         meta: { requiresAuth: true }
     },
 ]

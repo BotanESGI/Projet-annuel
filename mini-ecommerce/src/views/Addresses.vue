@@ -311,7 +311,7 @@ onMounted(async () => {
     return
   }
   try {
-    const res = await axios.get('/api/addresses', {
+    const res = await axios.get('/api/addresses_front', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -361,7 +361,7 @@ const saveAddress = async () => {
     const token = localStorage.getItem('token')
     let response
     if (editingAddress.value) {
-      response = await axios.put(`/api/addresses/${currentAddress.value.id}`, currentAddress.value, {
+      response = await axios.put(`/api/addresses_front${currentAddress.value.id}`, currentAddress.value, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const index = addresses.value.findIndex(a => a.id === currentAddress.value.id)
@@ -370,7 +370,7 @@ const saveAddress = async () => {
       }
       success.value = "Adresse mise à jour avec succès!"
     } else {
-      response = await axios.post('/api/addresses', currentAddress.value, {
+      response = await axios.post('/api/addresses_front', currentAddress.value, {
         headers: { Authorization: `Bearer ${token}` }
       })
       addresses.value.push(response.data.address)
@@ -414,10 +414,10 @@ const deleteAddress = async () => {
   isLoadingAction.value = true
   try {
     const token = localStorage.getItem('token')
-    await axios.delete(`/api/addresses/${addressToDeleteId.value}`, {
+    await axios.delete(`/api/addresses_front${addressToDeleteId.value}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    const res = await axios.get('/api/addresses', {
+    const res = await axios.get('/api/addresses_front', {
       headers: { Authorization: `Bearer ${token}` }
     })
     addresses.value = res.data.addresses
@@ -440,7 +440,7 @@ const setDefaultAddress = async (id) => {
   isLoadingAction.value = true
   try {
     const token = localStorage.getItem('token')
-    await axios.put(`/api/addresses/${id}/default`, {}, {
+    await axios.put(`/api/addresses_front${id}/default`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     })
     addresses.value.forEach(address => {
@@ -465,7 +465,7 @@ const setDefaultBillingAddress = async (id) => {
   isLoadingAction.value = true
   try {
     const token = localStorage.getItem('token')
-    await axios.put(`/api/addresses/${id}/default-billing`, {}, {
+    await axios.put(`/api/addresses_front${id}/default-billing`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     })
     addresses.value.forEach(address => {
