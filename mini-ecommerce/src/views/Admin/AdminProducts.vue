@@ -17,7 +17,7 @@ const form = ref({
   image: '',
   imageFile: null,
   type: 'PhysicalProduct',
-  defaultCategory: '',
+  defaultCategory: null,
   categories: [],
   tags: [],
   downloadLink: '',
@@ -27,6 +27,9 @@ const form = ref({
 })
 
 const newCharacteristic = ref({ key: '', value: '' })
+
+const formLoading = ref(false)
+const formErrors = ref([])
 
 const fetchProducts = async () => {
   loading.value = true
@@ -52,10 +55,11 @@ const openAddForm = () => {
   editingProduct.value = null
   Object.assign(form.value, {
     name: '', price: '', description: '', image: '', imageFile: null, type: 'PhysicalProduct',
-    defaultCategory: '', categories: [], tags: [],
+    defaultCategory: null, categories: [], tags: [],
     downloadLink: '', filesize: '', filetype: '', characteristics: {}
   })
   newCharacteristic.value = { key: '', value: '' }
+  formErrors.value = []
 }
 
 const editProduct = (product) => {
@@ -65,10 +69,10 @@ const editProduct = (product) => {
     name: product.name || '',
     price: product.price || '',
     description: product.description || '',
-    image: product.image || '',
+    image: product.image ? withBaseUrl(product.image) : '',
     imageFile: null,
     type: product['@type'] || 'PhysicalProduct',
-    defaultCategory: product.defaultCategory?.['@id'] || '',
+    defaultCategory: product.defaultCategory?.['@id'] || null,
     categories: (product.categories || []).map(cat => cat['@id']),
     tags: (product.tags || []).map(tag => tag['@id']),
     downloadLink: product.downloadLink || '',
@@ -77,11 +81,13 @@ const editProduct = (product) => {
     characteristics: product.characteristics ? { ...product.characteristics } : {}
   })
   newCharacteristic.value = { key: '', value: '' }
+  formErrors.value = []
 }
 
 const cancelEdit = () => {
   editingProduct.value = null
   showAddForm.value = false
+  formErrors.value = []
 }
 
 const onImageChange = async (e) => {
@@ -102,7 +108,8 @@ const uploadImage = async () => {
       Authorization: `Bearer ${token}`
     }
   })
-  return res.data.url
+  const url = res.data.url
+  return url.startsWith('/images/') ? url.replace('/images/', '') : url
 }
 const addCharacteristic = () => {
   if (newCharacteristic.value.key && newCharacteristic.value.value) {
@@ -116,6 +123,13 @@ const removeCharacteristic = (key) => {
 
 const handleSubmit = async (e) => {
   e.preventDefault()
+  formLoading.value = true
+  formErrors.value = []
+  if (!form.value.defaultCategory) {
+    formErrors.value = ['Veuillez sélectionner une catégorie par défaut.']
+    formLoading.value = false
+    return
+  }
   const token = localStorage.getItem('token')
   let imageUrl = form.value.image
   if (form.value.imageFile) {
@@ -128,7 +142,8 @@ const handleSubmit = async (e) => {
     image: imageUrl,
     defaultCategory: form.value.defaultCategory,
     categories: form.value.categories,
-    tags: form.value.tags
+    tags: form.value.tags,
+    product_type: form.value.type === 'DigitalProduct' ? 'digital' : 'physical'
   }
   if (form.value.type === 'DigitalProduct') {
     payload = {
@@ -146,14 +161,18 @@ const handleSubmit = async (e) => {
   try {
     let endpoint = ''
     if (editingProduct.value) {
-      endpoint = `/api/products/${editingProduct.value.id}`
+      endpoint =
+          form.value.type === 'DigitalProduct'
+              ? `/api/digital_products/${editingProduct.value.id}`
+              : `/api/physical_products/${editingProduct.value.id}`
       await axios.put(endpoint, payload, {
         headers: { Authorization: `Bearer ${token}` }
       })
     } else {
-      endpoint = form.value.type === 'DigitalProduct'
-          ? '/api/digital_products'
-          : '/api/physical_products'
+      endpoint =
+          form.value.type === 'DigitalProduct'
+              ? '/api/digital_products'
+              : '/api/physical_products'
       await axios.post(endpoint, payload, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -162,8 +181,22 @@ const handleSubmit = async (e) => {
     editingProduct.value = null
     await fetchProducts()
   } catch (err) {
-    alert('Erreur lors de la sauvegarde du produit.')
+    if (err.response && err.response.data && err.response.data.violations) {
+      formErrors.value = err.response.data.violations.map(v => v.message)
+    } else if (err.response && err.response.data && err.response.data['hydra:description']) {
+      formErrors.value = [err.response.data['hydra:description']]
+    } else {
+      formErrors.value = ['Erreur lors de la sauvegarde du produit.']
+    }
+  } finally {
+    formLoading.value = false
   }
+}
+
+const withBaseUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${window.location.protocol}//${window.location.hostname}/images/${path.replace(/^\/+|images\//, '')}`
 }
 
 const deleteProduct = async (id) => {
@@ -192,7 +225,7 @@ onMounted(() => {
 <template>
   <div class="p-8 min-h-screen">
     <h1 class="text-3xl font-extrabold mb-6 text-gray-800 flex items-center gap-2">
-      Gestion des produits
+      Gestion des produits (CRUD)
     </h1>
     <button
         @click="openAddForm"
@@ -232,7 +265,7 @@ onMounted(() => {
         >
           <td class="py-2 px-4 text-black min-w-[80px]">{{ product.id }}</td>
           <td class="py-2 px-4 text-black min-w-[120px]">
-            <img v-if="product.image" :src="product.image" alt="img" class="w-12 h-12 object-cover rounded" />
+            <img v-if="product.image" :src="withBaseUrl(product.image)" class="w-12 h-12 object-cover rounded" />
             <span v-else class="text-gray-400 italic">Aucune</span>
           </td>
           <td class="py-2 px-4 font-medium text-black min-w-[180px]">{{ product.name }}</td>
@@ -290,6 +323,14 @@ onMounted(() => {
             <span v-else class="text-gray-400 italic">-</span>
           </td>
           <td class="py-2 px-4 flex gap-2 text-black min-w-[120px]">
+            <router-link
+                :to="`/product/${product.id}`"
+                class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                title="Afficher le produit"
+                target="_blank"
+            >
+              Afficher
+            </router-link>
             <button
                 @click="editProduct(product)"
                 class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded"
@@ -333,7 +374,6 @@ onMounted(() => {
             <label class="block mb-1">Description</label>
             <textarea v-model="form.description" required class="w-full border rounded px-3 py-2"></textarea>
           </div>
-          <!-- ... -->
           <div class="mb-4">
             <label class="block mb-1">Image</label>
             <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" @change="onImageChange" class="mb-2" />
@@ -344,7 +384,6 @@ onMounted(() => {
               <img :src="form.image" alt="preview" class="w-20 h-20 object-cover rounded" />
             </div>
           </div>
-          <!-- ... -->
           <div class="mb-4">
             <label class="block mb-1">Type</label>
             <select v-model="form.type" class="w-full border rounded px-3 py-2">
@@ -360,8 +399,8 @@ onMounted(() => {
           </div>
           <div class="mb-4">
             <label class="block mb-1">Catégorie par défaut</label>
-            <select v-model="form.defaultCategory" class="w-full border rounded px-3 py-2">
-              <option value="">-- Choisir --</option>
+            <select v-model="form.defaultCategory" required class="w-full border rounded px-3 py-2">
+              <option disabled value="">-- Choisir --</option>
               <option v-for="cat in categories" :key="cat['@id']" :value="cat['@id']">{{ cat.name }}</option>
             </select>
           </div>
@@ -397,9 +436,15 @@ onMounted(() => {
               <button type="button" @click="addCharacteristic" class="bg-blue-500 text-white px-2 py-1 rounded">Ajouter</button>
             </div>
           </div>
+          <div v-if="formErrors.length" class="mb-4">
+            <ul class="bg-red-100 text-red-700 rounded px-4 py-2">
+              <li v-for="(err, i) in formErrors" :key="i">{{ err }}</li>
+            </ul>
+          </div>
           <div class="flex justify-end gap-2 mt-6">
             <button type="button" @click="cancelEdit" class="px-4 py-2 bg-gray-300 rounded">Annuler</button>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" :disabled="formLoading">
+              <span v-if="formLoading" class="loader-xs mr-2"></span>
               {{ editingProduct ? 'Enregistrer' : 'Ajouter' }}
             </button>
           </div>
@@ -448,6 +493,10 @@ onMounted(() => {
 :deep(textarea),
 :deep(button) {
   color: #111 !important;
+}
+
+:deep(button) {
+  color: #fff !important;
 }
 
 .form-modal-scroll {

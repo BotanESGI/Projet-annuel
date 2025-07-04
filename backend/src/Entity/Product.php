@@ -94,11 +94,11 @@ abstract class Product
     private Collection $reviews;
 
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'products')]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private Collection $tags;
 
     #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'products')]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private Collection $categories;
 
     #[ORM\ManyToOne(targetEntity: Category::class)]
