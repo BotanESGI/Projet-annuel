@@ -166,6 +166,8 @@ onMounted(() => {
           <th class="py-3 px-4 text-left">Code postal</th>
           <th class="py-3 px-4 text-left">Utilisateur</th>
           <th class="py-3 px-4 text-left">Type</th>
+          <th class="py-3 px-4 text-left">Par défaut</th>
+          <th class="py-3 px-4 text-left">Facturation par défaut</th>
           <th class="py-3 px-4 text-left">Actions</th>
         </tr>
         </thead>
@@ -187,6 +189,14 @@ onMounted(() => {
             <span v-if="address.type === 'shipping'">Livraison</span>
             <span v-else-if="address.type === 'billing'">Facturation</span>
             <span v-else>-</span>
+          </td>
+          <td class="py-2 px-4">
+            <span v-if="address.isDefault" class="text-green-600 font-bold">Oui</span>
+            <span v-else class="text-black">Non</span>
+          </td>
+          <td class="py-2 px-4">
+            <span v-if="address.isDefaultBilling" class="text-green-600 font-bold">Oui</span>
+            <span v-else class="text-black">Non</span>
           </td>
           <td class="py-2 px-4 flex gap-2">
             <button

@@ -26,6 +26,10 @@ services:
         arguments:
             $appUrl: '%app.url%'
 
+    App\Controller\Admin\AdminController:
+        arguments:
+            $appUrl: '%app.url%'
+
     App\EventListener\CheckVerifiedUserListener:
         tags:
             - { name: kernel.event_subscriber }

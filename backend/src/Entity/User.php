@@ -14,11 +14,24 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
+#[UniqueEntity(fields: ['email'], message: "Cet email est déjà utilisé.")]
 #[ApiResource(
     operations: [
-        new GetCollection(security: "is_granted('ROLE_ADMIN')", normalizationContext: ['groups' => ['address:read']]),
-        new Get(security: "is_granted('ROLE_ADMIN')", normalizationContext: ['groups' => ['address:read']])
+        new GetCollection(
+            security: "is_granted('ROLE_ADMIN')",
+            normalizationContext: ['groups' => ['address:read', 'user:read']]
+        ),
+        new Get(
+            security: "is_granted('ROLE_ADMIN')",
+            normalizationContext: ['groups' => ['address:read', 'user:read']]
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')"
+        )
     ]
 )]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -28,13 +41,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['review:user:read', 'address:read', 'review:read'])]
+    #[Groups(['review:user:read', 'address:read', 'review:read', 'user:read', 'user:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: "L'email ne doit pas être vide.")]
     #[Assert\Email(message: "L'email '{{ value }}' n'est pas un email valide.")]
-    #[Groups(['review:user:read', 'address:read','review:read'])]
+    #[Groups(['review:user:read', 'address:read','review:read', 'user:read', 'user:write'])]
     private ?string $email = null;
 
 
@@ -55,32 +68,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         pattern: '/[\W_]/',
         message: 'Le mot de passe doit contenir au moins un caractère spécial.'
     )]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $password = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: "le role ne doit pas être vide.")]
+    #[Groups(['user:read', 'user:write'])]
     private array $roles = [];
 
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le champ nom ne doit pas être vide.")]
     #[Assert\Length(min: 3, minMessage: "Le nom doit contenir au moins {{ limit }} caractères.")]
-    #[Groups(['review:read', 'review:user:read', 'address:read','review:read'])]
+    #[Groups(['review:read', 'review:user:read', 'address:read','review:read', 'user:read', 'user:write'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le champ prénom ne doit pas être vide.")]
     #[Assert\Length(min: 3, minMessage: "Le prénom doit contenir au moins {{ limit }} caractères.")]
-    #[Groups(['review:read', 'review:user:read', 'address:read', 'review:read'])]
+    #[Groups(['review:read', 'review:user:read', 'address:read', 'review:read', 'user:read', 'user:write'])]
     private ?string $lastname = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $resetToken = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $confirmationToken = null;
 
     #[ORM\Column(type: 'boolean')]
+    #[Groups(['user:read', 'user:write'])]
     private bool $isVerified = false;
 
     #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'user', cascade: ['remove'], orphanRemoval: true)]
@@ -99,6 +117,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $orders;
 
     #[ORM\Column(type: 'boolean')]
+    #[Groups(['user:read', 'user:write'])]
     private bool $isDeleted = false;
 
 
@@ -335,6 +354,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->confirmationToken = $confirmationToken;
         return $this;
+    }
+
+    public function getIsDeleted(): bool
+    {
+        return $this->isDeleted;
     }
 
     public function getIsVerified(): ?bool
