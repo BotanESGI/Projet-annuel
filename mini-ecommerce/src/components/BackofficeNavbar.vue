@@ -33,7 +33,7 @@
         <font-awesome-icon icon="map-marker-alt" />
         <span>Adresses</span>
       </router-link>
-      <router-link to="/backoffice/categories" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/category" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="tags" />
         <span>Catégories</span>
       </router-link>

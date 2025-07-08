@@ -9,6 +9,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\Category;
+use App\Repository\ProductRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 class AdminController extends AbstractController
 {
@@ -56,5 +61,28 @@ class AdminController extends AbstractController
         }
 
         return $this->json(['url' => '/images/' . $filename]);
+    }
+
+    #[Route('/api/admin/categories/{id}/delete-with-products', name: 'admin_category_delete_with_products', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteCategoryWithProducts(
+        int $id,
+        ProductRepository $productRepository,
+        EntityManagerInterface $em
+    ): Response {
+        $category = $em->getRepository(Category::class)->find($id);
+        if (!$category) {
+            return $this->json(['error' => 'Catégorie non trouvée'], 404);
+        }
+
+        $products = $productRepository->findBy(['defaultCategory' => $category]);
+        foreach ($products as $product) {
+            $em->remove($product);
+        }
+
+        $em->remove($category);
+        $em->flush();
+
+        return $this->json(['message' => 'Catégorie et produits associés supprimés.']);
     }
 }
