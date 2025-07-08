@@ -149,4 +149,14 @@ class Address
         $this->isDefaultBilling = $isDefaultBilling;
         return $this;
     }
+
+    public function getIsDefault(): bool
+    {
+        return $this->isDefault;
+    }
+
+    public function getIsDefaultBilling(): bool
+    {
+        return $this->isDefaultBilling;
+    }
 }

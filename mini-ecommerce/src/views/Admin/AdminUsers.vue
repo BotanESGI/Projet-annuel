@@ -1,0 +1,321 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const users = ref([])
+const showAddForm = ref(false)
+const editingUser = ref(null)
+const loading = ref(false)
+const deletingId = ref(null)
+const formLoading = ref(false)
+const formErrors = ref([])
+
+const form = ref({
+  email: '',
+  name: '',
+  lastname: '',
+  roles: [],
+  password: '',
+  resetToken: '',
+  confirmationToken: '',
+  isVerified: false,
+  isDeleted: false
+})
+
+const fetchUsers = async () => {
+  loading.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const res = await axios.get('/api/users', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    users.value = res.data['hydra:member'] || []
+  } finally {
+    loading.value = false
+  }
+}
+
+const openAddForm = () => {
+  showAddForm.value = true
+  editingUser.value = null
+  Object.assign(form.value, {
+    email: '', name: '', lastname: '', roles: [], password: '', resetToken: '', confirmationToken: '', isVerified: false, isDeleted: false
+  })
+  formErrors.value = []
+}
+
+const editUser = (user) => {
+  editingUser.value = { ...user }
+  showAddForm.value = false
+  Object.assign(form.value, {
+    email: user.email || '',
+    name: user.name || '',
+    lastname: user.lastname || '',
+    roles: user.roles || [],
+    password: '',
+    resetToken: user.resetToken || '',
+    confirmationToken: user.confirmationToken || '',
+    isVerified: !!user.isVerified,
+    isDeleted: !!user.isDeleted
+  })
+  formErrors.value = []
+}
+
+const cancelEdit = () => {
+  editingUser.value = null
+  showAddForm.value = false
+  formErrors.value = []
+}
+
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  formLoading.value = true
+  formErrors.value = []
+  const token = localStorage.getItem('token')
+  const payload = {
+    email: form.value.email,
+    name: form.value.name,
+    lastname: form.value.lastname,
+    roles: form.value.roles,
+    resetToken: form.value.resetToken,
+    confirmationToken: form.value.confirmationToken,
+    isVerified: form.value.isVerified,
+    isDeleted: form.value.isDeleted
+  }
+  if (form.value.password) {
+    payload.password = form.value.password
+  }
+  try {
+    let endpoint = ''
+    let method = ''
+    if (editingUser.value) {
+      endpoint = `/api/admin/users/${editingUser.value.id}`
+      method = 'put'
+    } else {
+      endpoint = '/api/admin/users'
+      method = 'post'
+    }
+    await axios[method](endpoint, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    showAddForm.value = false
+    editingUser.value = null
+    await fetchUsers()
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      formErrors.value = [err.response.data.error]
+    } else if (err.response && err.response.data && err.response.data.violations) {
+      formErrors.value = err.response.data.violations.map(v => v.message)
+    } else if (err.response && err.response.data && err.response.data['hydra:description']) {
+      formErrors.value = [err.response.data['hydra:description']]
+    } else {
+      formErrors.value = ['Erreur lors de la sauvegarde de l\'utilisateur.']
+    }
+  } finally {
+    formLoading.value = false
+  }
+}
+
+const deleteUser = async (id) => {
+  if (confirm('Supprimer cet utilisateur ?')) {
+    deletingId.value = id
+    try {
+      await axios.delete(`/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+      await fetchUsers()
+    } finally {
+      deletingId.value = null
+    }
+  }
+}
+
+onMounted(() => {
+  fetchUsers()
+})
+</script>
+
+<template>
+  <div class="p-8 min-h-screen">
+    <h1 class="text-3xl font-extrabold mb-6 text-gray-800 flex items-center gap-2">
+      Gestion des utilisateurs (CRUD)
+    </h1>
+    <button
+        @click="openAddForm"
+        class="mb-6 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded shadow transition"
+    >
+      Ajouter un utilisateur
+    </button>
+    <div v-if="loading" class="flex justify-center items-center h-40">
+      <span class="loader"></span>
+    </div>
+    <div v-else class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
+        <thead>
+        <tr class="bg-blue-50 text-gray-700">
+          <th class="py-3 px-4 text-left">ID</th>
+          <th class="py-3 px-4 text-left">Nom</th>
+          <th class="py-3 px-4 text-left">Prénom</th>
+          <th class="py-3 px-4 text-left">Email</th>
+          <th class="py-3 px-4 text-left">Rôles</th>
+          <th class="py-3 px-4 text-left">Vérifié</th>
+          <th class="py-3 px-4 text-left">Reset Token</th>
+          <th class="py-3 px-4 text-left">Confirmation Token</th>
+          <th class="py-3 px-4 text-left">Supprimé</th>
+          <th class="py-3 px-4 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr
+            v-for="user in users"
+            :key="user.id"
+            class="hover:bg-blue-50 transition"
+        >
+          <td class="py-2 px-4">{{ user.id }}</td>
+          <td class="py-2 px-4">{{ user.name }}</td>
+          <td class="py-2 px-4">{{ user.lastname }}</td>
+          <td class="py-2 px-4">{{ user.email }}</td>
+          <td class="py-2 px-4">
+            <span v-for="role in user.roles" :key="role" class="inline-block text-black rounded px-2 py-1 mr-1 text-xs">
+              {{ role }}
+            </span>
+          </td>
+          <td class="py-2 px-4">
+            <span :class="user.isVerified ? 'text-green-600 font-bold' : 'text-black'">
+              {{ user.isVerified ? 'Oui' : 'Non' }}
+            </span>
+          </td>
+          <td class="py-2 px-4">{{ user.resetToken || '-' }}</td>
+          <td class="py-2 px-4">{{ user.confirmationToken || '-' }}</td>
+          <td class="py-2 px-4">
+            <span :class="user.isDeleted ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
+              {{ user.isDeleted ? 'Oui' : 'Non' }}
+            </span>
+          </td>
+          <td class="py-2 px-4 flex gap-2">
+            <button
+                @click="editUser(user)"
+                class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded"
+            >Modifier</button>
+            <button
+                @click="deleteUser(user.id)"
+                :disabled="deletingId === user.id"
+                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded"
+            >
+              <span v-if="deletingId === user.id" class="loader-xs"></span>
+              <span v-else>Supprimer</span>
+            </button>
+          </td>
+        </tr>
+        <tr v-if="users.length === 0">
+          <td colspan="10" class="text-center py-6 text-gray-400">Aucun utilisateur trouvé.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+        v-if="showAddForm || editingUser"
+        class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg relative form-modal-scroll text-black">
+        <h2 class="text-2xl font-bold mb-4 text-black">
+          {{ editingUser ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur' }}
+        </h2>
+        <form @submit="handleSubmit" class="text-black">
+          <div class="mb-4">
+            <label class="block mb-1">Email</label>
+            <input v-model="form.email" required class="w-full border rounded px-3 py-2" type="email" />
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Nom</label>
+            <input v-model="form.name" required class="w-full border rounded px-3 py-2" />
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Prénom</label>
+            <input v-model="form.lastname" required class="w-full border rounded px-3 py-2" />
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Rôles</label>
+            <select v-model="form.roles" multiple class="w-full border rounded px-3 py-2">
+              <option value="ROLE_USER">ROLE_USER</option>
+              <option value="ROLE_ADMIN">ROLE_ADMIN</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Mot de passe</label>
+            <input v-model="form.password" :required="!editingUser" class="w-full border rounded px-3 py-2" type="password" autocomplete="new-password" />
+            <small class="text-gray-500" v-if="editingUser">Laisser vide pour ne pas changer.</small>
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Reset Token</label>
+            <input v-model="form.resetToken" class="w-full border rounded px-3 py-2" />
+          </div>
+          <div class="mb-4">
+            <label class="block mb-1">Confirmation Token</label>
+            <input v-model="form.confirmationToken" class="w-full border rounded px-3 py-2" />
+          </div>
+          <div class="mb-4 flex items-center">
+            <input type="checkbox" v-model="form.isVerified" id="isVerified" />
+            <label for="isVerified" class="ml-2">Utilisateur vérifié</label>
+          </div>
+          <div class="mb-4 flex items-center">
+            <input type="checkbox" v-model="form.isDeleted" id="isDeleted" />
+            <label for="isDeleted" class="ml-2">Utilisateur supprimé</label>
+          </div>
+          <div v-if="formErrors.length" class="mb-4">
+            <ul class="bg-red-100 text-red-700 rounded px-4 py-2">
+              <li v-for="(err, i) in formErrors" :key="i">{{ err }}</li>
+            </ul>
+          </div>
+          <div class="flex justify-end gap-2 mt-6">
+            <button type="button" @click="cancelEdit" class="px-4 py-2 bg-gray-300 rounded">Annuler</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" :disabled="formLoading">
+              <span v-if="formLoading" class="loader-xs mr-2"></span>
+              {{ editingUser ? 'Enregistrer' : 'Ajouter' }}
+            </button>
+          </div>
+        </form>
+        <button
+            @click="cancelEdit"
+            class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl"
+            title="Fermer"
+        >×</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.loader {
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+.loader-xs {
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg);}
+}
+.form-modal-scroll {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+:deep(table),
+:deep(th),
+:deep(td) {
+  color: #111 !important;
+}
+</style>
