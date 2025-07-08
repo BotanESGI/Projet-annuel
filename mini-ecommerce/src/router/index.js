@@ -21,6 +21,7 @@ import Backoffice from '../views/Backoffice.vue'
 import AdminProducts from '../views/Admin/AdminProducts.vue'
 import AdminAddresses from '../views/Admin/AdminAddresses.vue'
 import AdminTags from '../views/Admin/AdminTags.vue'
+import AdminCategory from "@/views/Admin/AdminCategory.vue";
 
 const routes = [
     {
@@ -151,6 +152,12 @@ const routes = [
         path: '/backoffice/tags',
         name: 'Admin Gestion des Tags',
         component: AdminTags,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/category',
+        name: 'Admin Gestion des Catégories',
+        component: AdminCategory,
         meta: { requiresAuth: true }
     },
 ]

@@ -5,6 +5,9 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -18,9 +21,20 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new GetCollection(
             normalizationContext: ['groups' => ['category:read']]
+        ),
+        new Post(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent créer des catégories",
+            denormalizationContext: ['groups' => ['category:write']]
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent modifier des catégories",
+            denormalizationContext: ['groups' => ['category:write']]
         )
     ],
-    normalizationContext: ['groups' => ['category:read']]
+    normalizationContext: ['groups' => ['category:read']],
+    denormalizationContext: ['groups' => ['category:write']]
 )]
 #[ORM\Entity]
 class Category
@@ -28,11 +42,11 @@ class Category
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['category:read', 'product:read'])]
+    #[Groups(['category:read','category:write', 'product:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['category:read', 'product:read'])]
+    #[Groups(['category:read', 'category:write', 'product:read'])]
     #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
     #[Assert\Length(
         min: 3,
@@ -41,7 +55,7 @@ class Category
     private ?string $name = null;
 
     #[ORM\Column(length: 7, nullable: true)]
-    #[Groups(['category:read', 'product:read'])]
+    #[Groups(['category:read', 'category:write', 'product:read'])]
     #[Assert\NotBlank(message: "Le champ couleur ne doit pas être vide.")]
     #[Assert\Regex(
         pattern: '/^#([0-9A-F]{3}){1,2}$/i',
@@ -50,6 +64,7 @@ class Category
     private ?string $color = null;
 
     #[ORM\ManyToMany(targetEntity: Product::class, mappedBy: 'categories')]
+    #[Groups(['category:read'])]
     private Collection $products;
 
     public function __construct()

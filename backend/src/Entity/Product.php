@@ -55,11 +55,11 @@ abstract class Product
     #[ORM\GeneratedValue]
     #[ORM\Column]
     // Ajout de `#[Groups]` pour permettre l'exposition dans l'API
-    #[Groups(['product:read', 'tag:read'])]
+    #[Groups(['product:read', 'tag:read', 'category:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['product:read', 'product:write', 'tag:read'])]
+    #[Groups(['product:read', 'product:write', 'tag:read', 'category:read'])]
     #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
     #[Assert\Length(
         min: 3,
@@ -102,7 +102,6 @@ abstract class Product
 
     #[ORM\ManyToOne(targetEntity: Category::class)]
     #[ORM\JoinColumn(nullable: false)]
-    // Ajout de `#[Groups]` pour exposer la catégorie par défaut dans l'API
     #[Groups(['product:read', 'product:write'])]
     #[Assert\NotBlank(message: "La category par defaut ne doit pas être vide.")]
     private Category $defaultCategory;
