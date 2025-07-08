@@ -5,7 +5,7 @@
       Back Office
     </div>
     <nav class="flex flex-col gap-2">
-      <router-link to="/backoffice" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/backoffice/" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="tachometer-alt" />
         <span>Tableau de bord</span>
       </router-link>
