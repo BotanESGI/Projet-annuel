@@ -45,7 +45,7 @@
         <font-awesome-icon icon="tag" />
         <span>Tags</span>
       </router-link>
-      <router-link to="/backoffice/" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
+      <router-link to="/" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700">
         <font-awesome-icon icon="arrow-left" />
         <span>Retour au site</span>
       </router-link>
