@@ -54,12 +54,11 @@ abstract class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    // Ajout de `#[Groups]` pour permettre l'exposition dans l'API
-    #[Groups(['product:read', 'tag:read', 'category:read'])]
+    #[Groups(['product:read', 'tag:read', 'category:read', 'review:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['product:read', 'product:write', 'tag:read', 'category:read'])]
+    #[Groups(['product:read', 'product:write', 'tag:read', 'category:read', 'review:read'])]
     #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
     #[Assert\Length(
         min: 3,

@@ -22,6 +22,7 @@ import AdminProducts from '../views/Admin/AdminProducts.vue'
 import AdminAddresses from '../views/Admin/AdminAddresses.vue'
 import AdminTags from '../views/Admin/AdminTags.vue'
 import AdminCategory from "@/views/Admin/AdminCategory.vue";
+import AdminReviews from "@/views/Admin/AdminReviews.vue";
 
 const routes = [
     {
@@ -158,6 +159,12 @@ const routes = [
         path: '/backoffice/category',
         name: 'Admin Gestion des Catégories',
         component: AdminCategory,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/reviews',
+        name: 'Admin Gestion des Avis',
+        component: AdminReviews,
         meta: { requiresAuth: true }
     },
 ]

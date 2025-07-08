@@ -20,17 +20,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity]
 #[ApiResource(
     operations: [
-        new Get(
-            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
-            security: "is_granted('READ', object)"
-        ),
-        new GetCollection(
-            normalizationContext: ['groups' => ['review:read', 'review:user:read']],
-            security: "is_granted('PUBLIC_ACCESS')"
-        ),
-        new Delete(
-            security: "is_granted('DELETE', object)"
-        )
+        new Get(normalizationContext: ['groups' => ['review:read']]),
+        new GetCollection(normalizationContext: ['groups' => ['review:read']]),
+        new Post(denormalizationContext: ['groups' => ['review:write']]),
+        new Put(denormalizationContext: ['groups' => ['review:write']]),
+        new Delete()
     ],
     normalizationContext: ['groups' => ['review:read']],
     denormalizationContext: ['groups' => ['review:write']]
@@ -42,7 +36,7 @@ class Review
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['review:read'])]
+    #[Groups(['review:read', 'review:write', 'review:user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'text')]
@@ -77,12 +71,12 @@ class Review
 
     #[ORM\Column(enumType: ReviewStatusEnum::class)]
     #[Assert\NotBlank(message: "Le status ne doit pas être vide.")]
-    #[Groups(['review:read'])]
+    #[Groups(['review:read', 'review:write'])]
     private ?ReviewStatusEnum $status = null;
 
     #[ORM\Column(type: 'datetime')]
     #[Assert\NotBlank(message: "La date de publication ne doit pas être vide.")]
-    #[Groups(['review:read'])]
+    #[Groups(['review:read', 'review:write'])]
     private ?\DateTimeInterface $datePublication = null;
 
     public function __construct()
