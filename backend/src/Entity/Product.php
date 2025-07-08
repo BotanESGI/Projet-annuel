@@ -55,12 +55,11 @@ abstract class Product
     #[ORM\GeneratedValue]
     #[ORM\Column]
     // Ajout de `#[Groups]` pour permettre l'exposition dans l'API
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'tag:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    // Ajout de `#[Groups]` pour exposer le nom dans l'API
-    #[Groups(['product:read', 'product:write'])]
+    #[Groups(['product:read', 'product:write', 'tag:read'])]
     #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
     #[Assert\Length(
         min: 3,

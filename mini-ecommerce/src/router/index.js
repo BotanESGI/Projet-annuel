@@ -20,6 +20,7 @@ import Home from '../views/Home.vue'
 import Backoffice from '../views/Backoffice.vue'
 import AdminProducts from '../views/Admin/AdminProducts.vue'
 import AdminAddresses from '../views/Admin/AdminAddresses.vue'
+import AdminTags from '../views/Admin/AdminTags.vue'
 
 const routes = [
     {
@@ -144,6 +145,12 @@ const routes = [
         path: '/backoffice/addresses',
         name: 'Admin Gestion des Adresses',
         component: AdminAddresses,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/tags',
+        name: 'Admin Gestion des Tags',
+        component: AdminTags,
         meta: { requiresAuth: true }
     },
 ]

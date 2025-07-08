@@ -5,6 +5,9 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -18,9 +21,24 @@ use Doctrine\ORM\Mapping as ORM;
         ),
         new GetCollection(
             normalizationContext: ['groups' => ['tag:read']]
+        ),
+        new Post(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent créer des tags",
+            denormalizationContext: ['groups' => ['tag:write']]
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent modifier des tags",
+            denormalizationContext: ['groups' => ['tag:write']]
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les administrateurs peuvent supprimer des tags"
         )
     ],
-    normalizationContext: ['groups' => ['tag:read']]
+    normalizationContext: ['groups' => ['tag:read']],
+    denormalizationContext: ['groups' => ['tag:write']]
 )]
 #[ORM\Entity]
 class Tag
@@ -32,16 +50,17 @@ class Tag
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['tag:read', 'product:read'])]
+    #[Groups(['tag:read', 'product:read', 'tag:write'])]
     #[Assert\NotBlank(message: "Le champ nom ne doit pas être vide.")]
     private ?string $name = null;
 
+    #[Groups(['tag:read'])]
     #[ORM\ManyToMany(targetEntity: Product::class, mappedBy: 'tags')]
     #[Assert\NotBlank(message: "Le produit ne doit pas être vide.")]
     private Collection $products;
 
     #[ORM\Column(length: 7, nullable: true)]
-    #[Groups(['tag:read', 'product:read'])]
+    #[Groups(['tag:read', 'product:read', 'tag:write'])]
     #[Assert\NotBlank(message: "Le champ couleur ne doit pas être vide.")]
     #[Assert\Regex(
         pattern: '/^#([0-9A-F]{3}){1,2}$/i',
