@@ -130,7 +130,7 @@ const routes = [
     {
         path: '/',
         name: 'Accueil',
-        component: () => Home,
+        component: Home,
     },
     {
         path: '/backoffice',
