@@ -52,5 +52,38 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
+  matomo_db:
+    image: mariadb:10.5
+    command: --max-allowed-packet=64MB
+    environment:
+      MYSQL_ROOT_PASSWORD: matomo_root_password
+      MYSQL_DATABASE: matomo
+      MYSQL_USER: matomo_user
+      MYSQL_PASSWORD: matomo_password
+    volumes:
+      - matomo_db_data:/var/lib/mysql
+    restart: always
+
+  matomo:
+    image: matomo:latest
+    ports:
+      - "8082:80"
+    environment:
+      MATOMO_DATABASE_HOST: matomo_db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo_user
+      MATOMO_DATABASE_PASSWORD: matomo_password
+      MATOMO_DATABASE_DBNAME: matomo
+    volumes:
+      - matomo_data:/var/www/html
+    depends_on:
+      - matomo_db
+    restart: always
+
+
+
 volumes:
   db_data:
+  matomo_data:
+  matomo_db_data:
