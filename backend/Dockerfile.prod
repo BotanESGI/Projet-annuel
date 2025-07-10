@@ -15,9 +15,6 @@ WORKDIR /var/www/html
 # Copier les fichiers du projet dans le container
 COPY . .
 
-#Utilise le fichier .env.dev pour l'environnement dev
-COPY .env.dev .env
-
 # Modifier la propriété des fichiers pour l'utilisateur Apache
 RUN chown -R www-data:www-data /var/www/html
 
