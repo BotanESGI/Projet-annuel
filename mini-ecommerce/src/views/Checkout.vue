@@ -27,7 +27,7 @@ onMounted(async () => {
     return
   }
   try {
-    const res = await axios.get('/api/addresses', {
+    const res = await axios.get('/api/addresses_front', {
       headers: { Authorization: `Bearer ${token}` }
     })
     addresses.value = res.data.addresses

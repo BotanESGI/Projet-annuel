@@ -40,7 +40,9 @@ security:
         - { path: ^/api/reviews$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/reviews/\d+$, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/home, roles: PUBLIC_ACCESS }
-        - { path: ^/api/orders, roles: ROLE_ADMIN }
+        - { path: ^/api/orders$, methods: [ GET ], roles: ROLE_ADMIN }
+        - { path: ^/api/orders/\d+$, methods: [ GET ], roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/orders_details/\d+$, methods: [ GET ], roles: IS_AUTHENTICATED_FULLY }docker exec -it projet-annuel-db-1 bashdocker exec -it projet-annuel-web-1 bash
         - { path: ^/api/tags, methods: [ GET ], roles: PUBLIC_ACCESS }
         - { path: ^/api/upload, roles: ROLE_ADMIN }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY  }

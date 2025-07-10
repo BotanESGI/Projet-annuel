@@ -21,11 +21,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AuthController extends AbstractController
 {
     private string $appUrl;
+    private string $mailerFrom;
 
-    public function __construct(string $appUrl)
+    public function __construct(string $appUrl, string $mailerFrom)
     {
         $this->appUrl = $appUrl;
+        $this->mailerFrom = $mailerFrom;
     }
+
 
     #[Route('/api/register', name: 'register_post', methods: ['POST'])]
     public function register(
@@ -78,7 +81,7 @@ class AuthController extends AbstractController
             $verificationUrl = $this->appUrl . '/account-verification/' . $user->getConfirmationToken();
 
             $email = (new Email())
-                ->from('noreply@mini-ecommerce.com')
+                ->from($this->mailerFrom)
                 ->to($user->getEmail())
                 ->subject('Vérification de votre compte')
                 ->html($this->renderView('emails/security/account_verification.html.twig', [
