@@ -51,9 +51,21 @@ library.add(
 
 import router from './router'
 
+import VueMatomo from 'vue-matomo'
+
 const app = createApp(App)
 
 app.use(router)
+
+// Configuration de vue-matomo
+app.use(VueMatomo, {
+    host: 'http://localhost:8082/',
+    siteId: 1,
+    router,
+    enableLinkTracking: true,
+    requireConsent: false,
+    trackInitialView: true,
+})
 
 app.component('font-awesome-icon', FontAwesomeIcon)
 
