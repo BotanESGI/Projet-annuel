@@ -264,7 +264,7 @@ class AppFixtures extends Fixture
                     'tailles_disponibles' => 'S, M, L, XL',
                     'color'               => 'Blanc'
                 ],
-                'image' => 'https://upload.wikimedia.org/wikipedia/commons/2/24/Blue_Tshirt.jpg',
+                'image' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/T-shirt.jpg/500px-T-shirt.jpg',
                 'default_category' => 'Mode',
                 'category' => 'Mode',
             ],
