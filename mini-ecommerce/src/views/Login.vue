@@ -20,7 +20,7 @@
                 name="email"
                 type="email"
                 required
-                :disabled="isLoading"
+                :disabled="isLoading || is2FARequired"
                 class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="exemple@email.com"
             />
@@ -35,14 +35,31 @@
                 name="password"
                 type="password"
                 required
-                :disabled="isLoading"
+                :disabled="isLoading || is2FARequired"
                 class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Votre mot de passe"
             />
           </div>
+
+          <div v-if="is2FARequired">
+            <label for="totp" class="block text-sm font-medium text-gray-700">
+              Code 2FA
+            </label>
+            <input
+                id="totp"
+                v-model="totp"
+                name="totp"
+                type="text"
+                maxlength="6"
+                required
+                :disabled="isLoading"
+                class="mt-1 appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                placeholder="Code à 6 chiffres"
+            />
+          </div>
         </div>
 
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between" v-if="!is2FARequired">
           <div class="text-sm">
             <a href="/forget-password" class="font-medium text-blue-600 hover:text-blue-500">
               Mot de passe oublié ?
@@ -62,11 +79,11 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ isLoading ? 'Connexion en cours...' : 'Se connecter' }}
+            {{ isLoading ? (is2FARequired ? 'Vérification 2FA...' : 'Connexion en cours...') : (is2FARequired ? 'Valider le code 2FA' : 'Se connecter') }}
           </button>
         </div>
 
-        <div class="text-center">
+        <div class="text-center" v-if="!is2FARequired">
           <router-link to="/register" class="font-medium text-blue-600 hover:text-blue-500" :class="{ 'pointer-events-none opacity-50': isLoading }">
             Pas encore de compte ? S'inscrire
           </router-link>
@@ -85,50 +102,90 @@ import axios from 'axios'
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const totp = ref('')
 const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
+const is2FARequired = ref(false)
+const tempToken = ref('')
 
 const connexion = async () => {
   if (isLoading.value) return
   error.value = ''
   success.value = ''
-  try {
-    isLoading.value = true
-    const response = await axios.post('/api/login_check', {
-      username: email.value,
-      password: password.value
-    })
 
-    localStorage.setItem('token', response.data.token)
-    localStorage.setItem('userId', response.data.userId)
-    localStorage.setItem('userLastName', response.data.userLastName);
-    localStorage.setItem('userName', response.data.userName);
-    localStorage.setItem('roles', JSON.stringify(response.data.roles));
+  if (!is2FARequired.value) {
+    try {
+      isLoading.value = true
+      const response = await axios.post('/api/login_check', {
+        username: email.value,
+        password: password.value
+      })
 
-    window.dispatchEvent(new Event('auth-changed'))
-    success.value = 'Connexion réussie ! Redirection...'
-    setTimeout(() => {
-      router.push('/')
-    }, 2000)
-  } catch (err) {
-    if (err.response?.data?.message === "Votre compte n'est pas encore vérifié.") {
-      error.value = "Votre compte n'est pas encore vérifié. Veuillez vérifier vos emails pour activer votre compte."
-    } else {
-      error.value = 'Email ou mot de passe incorrect'
+      if (response.data['2fa_required']) {
+        is2FARequired.value = true
+        tempToken.value = response.data.tempToken
+        success.value = 'Veuillez saisir le code 2FA généré par votre application.'
+        return
+      }
+
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('userId', response.data.userId)
+      localStorage.setItem('userLastName', response.data.userLastName)
+      localStorage.setItem('userName', response.data.userName)
+      localStorage.setItem('roles', JSON.stringify(response.data.roles))
+
+      window.dispatchEvent(new Event('auth-changed'))
+      success.value = 'Connexion réussie ! Redirection...'
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+    } catch (err) {
+      if (err.response?.data?.message === "Votre compte n'est pas encore vérifié.") {
+        error.value = "Votre compte n'est pas encore vérifié. Veuillez vérifier vos emails pour activer votre compte."
+      } else if (err.response?.data?.['2fa_required']) {
+        is2FARequired.value = true
+        tempToken.value = err.response.data.tempToken
+        success.value = 'Veuillez saisir le code 2FA généré par votre application.'
+      } else {
+        error.value = 'Email ou mot de passe incorrect'
+      }
+    } finally {
+      isLoading.value = false
     }
-  } finally {
-    isLoading.value = false
+  } else {
+    try {
+      isLoading.value = true
+      const response = await axios.post('/api/2fa/verify', {
+        code: totp.value
+      }, {
+        headers: {
+          Authorization: `Bearer ${tempToken.value}`
+        }
+      })
+
+      if (response.data.valid && response.data.token) {
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('userId', response.data.userId)
+        localStorage.setItem('userLastName', response.data.userLastName)
+        localStorage.setItem('userName', response.data.userName)
+        localStorage.setItem('roles', JSON.stringify(response.data.roles))
+
+        window.dispatchEvent(new Event('auth-changed'))
+        success.value = 'Connexion 2FA réussie ! Redirection...'
+        setTimeout(() => {
+          router.push('/')
+        }, 2000)
+      } else if (!response.data.valid) {
+        error.value = 'Code 2FA invalide'
+      } else {
+        error.value = 'Erreur lors de la connexion 2FA'
+      }
+    } catch (err) {
+      error.value = 'Erreur lors de la vérification 2FA'
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 </script>
-
-<style scoped>
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg);}
-  to { transform: rotate(360deg);}
-}
-</style>

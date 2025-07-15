@@ -6,17 +6,35 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 class JWTAuthenticationSuccessHandler extends AuthenticationSuccessHandler
 {
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token): JsonResponse
+    protected $jwtManager;
+
+    public function setJwtManager(JWTTokenManagerInterface $jwtManager)
     {
+        $this->jwtManager = $jwtManager;
+    }
+
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token): \Symfony\Component\HttpFoundation\Response
+    {
+        $user = $token->getUser();
+
+        if ($user instanceof UserInterface && method_exists($user, 'getTotpSecret') && $user->getTotpSecret()) {
+            $tempToken = $this->jwtManager->create($user);
+            return new JsonResponse([
+                '2fa_required' => true,
+                'tempToken' => $tempToken,
+            ]);
+        }
 
         $response = parent::onAuthenticationSuccess($request, $token);
-
         $data = json_decode($response->getContent(), true);
+        if (!is_array($data)) {
+            $data = [];
+        }
 
-        $user = $token->getUser();
         if ($user instanceof UserInterface && method_exists($user, 'getId')) {
             $data['userId'] = $user->getId();
         }

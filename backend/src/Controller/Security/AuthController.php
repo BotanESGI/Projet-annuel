@@ -16,6 +16,7 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\TotpService;
 
 #[AsController]
 class AuthController extends AbstractController
@@ -252,5 +253,71 @@ class AuthController extends AbstractController
                 'details' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/api/2fa/activate', name: '2fa_activate', methods: ['POST'])]
+    public function activate2fa(
+        EntityManagerInterface $em,
+        TotpService $totpService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        $secret = $totpService->generateSecret();
+        $user->setTotpSecret($secret);
+        $em->flush();
+
+        $otpUrl = $totpService->getOtpAuthUrl($user->getEmail(), 'Bytemeuh', $secret);
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($otpUrl);
+        return new JsonResponse([
+            'secret' => $secret,
+            'otpAuthUrl' => $otpUrl,
+            'qrCodeUrl' => $qrCodeUrl
+        ]);
+    }
+
+    #[Route('/api/2fa/verify', name: '2fa_verify', methods: ['POST'])]
+    public function verify2fa(
+        Request $request,
+        TotpService $totpService,
+        JWTTokenManagerInterface $jwtManager
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['code'])) {
+            return new JsonResponse(['error' => 'Code manquant'], 400);
+        }
+        $secret = $user->getTotpSecret();
+        if (!$secret) {
+            return new JsonResponse(['error' => '2FA non activé'], 400);
+        }
+        $isValid = $totpService->verifyCode($secret, $data['code']);
+        if ($isValid) {
+            $token = $jwtManager->create($user);
+            return new JsonResponse([
+                'valid' => true,
+                'token' => $token,
+                'userId' => $user->getId(),
+                'userName' => $user->getName(),
+                'userLastName' => $user->getLastname(),
+                'roles' => $user->getRoles()
+            ]);
+        }
+        return new JsonResponse(['valid' => false]);
+    }
+
+    #[Route('/api/2fa/deactivate', name: '2fa_deactivate', methods: ['POST'])]
+    public function deactivate2fa(EntityManagerInterface $em): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        $user->setTotpSecret(null);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
     }
 }
