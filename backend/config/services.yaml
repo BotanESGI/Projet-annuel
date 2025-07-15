@@ -33,6 +33,10 @@ services:
             $appUrl: '%app.url%'
             $mailerFrom: '%mailer_from%'
 
+    App\Controller\SEO\SiteMapController:
+        arguments:
+            $appUrl: '%app.url%'
+
     App\EventListener\CheckVerifiedUserListener:
         tags:
             - { name: kernel.event_subscriber }
