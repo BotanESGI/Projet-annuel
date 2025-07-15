@@ -10,7 +10,10 @@
       <form class="mt-8 space-y-6" @submit.prevent="envoyerFormulaire">
         <div class="rounded-md shadow-sm space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Nom</label>
+            <label class="block text-sm font-medium text-gray-700">
+              Nom
+              <span class="text-red-500">*</span>
+            </label>
             <input
                 v-model="nom"
                 type="text"
@@ -20,7 +23,10 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <label class="block text-sm font-medium text-gray-700">
+              Email
+              <span class="text-red-500">*</span>
+            </label>
             <input
                 v-model="email"
                 type="email"
@@ -30,7 +36,10 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700">Message</label>
+            <label class="block text-sm font-medium text-gray-700">
+              Message
+              <span class="text-red-500">*</span>
+            </label>
             <textarea
                 v-model="message"
                 required
@@ -70,7 +79,8 @@ const message = ref('')
 const confirmation = ref(false)
 const erreur = ref(null)
 
-const API_URL = 'https://exemple.com/api/contact'
+// Mets ici l'URL de ton backend Symfony
+const API_URL = '/api/contact'
 
 const envoyerFormulaire = async () => {
   confirmation.value = false
@@ -90,7 +100,11 @@ const envoyerFormulaire = async () => {
     email.value = ''
     message.value = ''
   } catch (err) {
-    erreur.value = 'Erreur lors de l\'envoi. Veuillez réessayer.'
+    if (err.response && err.response.data && err.response.data.error) {
+      erreur.value = err.response.data.error
+    } else {
+      erreur.value = 'Erreur lors de l\'envoi. Veuillez réessayer.'
+    }
     console.error(err)
   }
 }

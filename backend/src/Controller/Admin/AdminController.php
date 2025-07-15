@@ -487,6 +487,40 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Panier créé', 'id' => $cart->getId()]);
     }
 
+    #[Route('/api/contact', name: 'api_contact', methods: ['POST'])]
+    public function contact(
+        Request $request,
+        MailerInterface $mailer,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        // Correction des clés
+        if (empty($data['nom']) || empty($data['email']) || empty($data['message'])) {
+            return $this->json(['error' => 'Tous les champs sont obligatoires.'], 400);
+        }
+
+        // Validation de l'email
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['error' => 'Email invalide.'], 400);
+        }
+
+        $email = (new Email())
+            ->from($this->mailerFrom)
+            ->to($this->mailerFrom)
+            ->replyTo($data['email'])
+            ->subject('Nouveau message de contact')
+            ->html("
+            <p><strong>Nom :</strong> {$data['nom']}</p>
+            <p><strong>Email :</strong> {$data['email']}</p>
+            <p><strong>Message :</strong><br>{$data['message']}</p>
+        ");
+
+        $mailer->send($email);
+
+        return new JsonResponse(['message' => 'Message envoyé avec succès !']);
+    }
+
     #[Route('/api/carts/{id}', name: 'admin_cart_update', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN')]
     public function updateCart(
