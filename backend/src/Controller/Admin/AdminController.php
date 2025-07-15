@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Category;
 use App\Entity\User;
 use App\Repository\ProductRepository;
+use App\Repository\InvoiceRepository;
 use App\Repository\UserRepository;
 use App\Repository\OrdersRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,14 +20,18 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Entity\Invoice;
+use App\Entity\Orders;
 
 class AdminController extends AbstractController
 {
+    private EntityManagerInterface $entityManager;
     private string $appUrl;
     private string $mailerFrom;
 
-    public function __construct(string $appUrl, string $mailerFrom)
+    public function __construct(EntityManagerInterface $entityManager, string $appUrl, string $mailerFrom)
     {
+        $this->entityManager = $entityManager;
         $this->appUrl = $appUrl;
         $this->mailerFrom = $mailerFrom;
     }
@@ -210,5 +215,183 @@ class AdminController extends AbstractController
         $em->flush();
 
         return $this->json(['message' => 'Utilisateur modifié']);
+    }
+
+    #[Route('api/admin/invoices', name: 'admin_invoice_list', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function list(EntityManagerInterface $em): JsonResponse
+    {
+        $invoices = $em->getRepository(Invoice::class)->findAll();
+        $data = array_map(function (Invoice $invoice) {
+            return [
+                'id' => $invoice->getId(),
+                'totalAmount' => $invoice->getTotalAmount(),
+                'user' => [
+                    'id' => $invoice->getUser()?->getId(),
+                    'name' => $invoice->getUser()?->getName(),
+                    'lastname' => $invoice->getUser()?->getLastname(),
+                    'email' => $invoice->getUser()?->getEmail(),
+                ],
+                'order' => $invoice->getOrder() ? [
+                    'id' => $invoice->getOrder()->getId(),
+                    'total' => $invoice->getOrder()->getTotal(),
+                ] : null,
+                'pdfPath' => $invoice->getPdfPath(),
+                'paymentId' => $invoice->getPaymentId(),
+            ];
+        }, $invoices);
+
+        return $this->json($data);
+    }
+
+    #[Route('api/admin/invoices_get/{id}', name: 'admin_invoice_show', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function show(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $invoice = $em->getRepository(Invoice::class)->find($id);
+        if (!$invoice) {
+            return $this->json(['error' => 'Facture non trouvée'], 404);
+        }
+        return $this->json([
+            'id' => $invoice->getId(),
+            'totalAmount' => $invoice->getTotalAmount(),
+            'user' => [
+                'id' => $invoice->getUser()?->getId(),
+                'name' => $invoice->getUser()?->getName(),
+                'lastname' => $invoice->getUser()?->getLastname(),
+                'email' => $invoice->getUser()?->getEmail(),
+            ],
+            'order' => $invoice->getOrder() ? [
+                'id' => $invoice->getOrder()->getId(),
+                'total' => $invoice->getOrder()->getTotal(),
+            ] : null,
+            'pdfPath' => $invoice->getPdfPath(),
+            'paymentId' => $invoice->getPaymentId(),
+        ]);
+    }
+
+    #[Route('api/admin/invoices_create', name: 'admin_invoice_create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function create(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $invoice = new Invoice();
+        $invoice->setTotalAmount($data['totalAmount'] ?? 0);
+
+        $user = $em->getRepository(User::class)->find($data['user'] ?? null);
+        if (!$user) {
+            return $this->json(['error' => 'Utilisateur non trouvé'], 400);
+        }
+        $invoice->setUser($user);
+
+        $order = $em->getRepository(Orders::class)->find($data['order'] ?? null);
+        if ($order) {
+            $invoice->setOrder($order);
+        }
+
+        $invoice->setPdfPath($data['pdfPath'] ?? null);
+        $invoice->setPaymentId($data['paymentId'] ?? null);
+
+        $errors = $validator->validate($invoice);
+        if (count($errors) > 0) {
+            return $this->json(['violations' => array_map(fn($e) => $e->getMessage(), iterator_to_array($errors))], 400);
+        }
+
+        $em->persist($invoice);
+        $em->flush();
+
+        return $this->json(['message' => 'Facture créée', 'id' => $invoice->getId()]);
+    }
+
+    #[Route('api/admin/invoices_update/{id}', name: 'admin_invoice_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(int $id, Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
+    {
+        $invoice = $em->getRepository(Invoice::class)->find($id);
+        if (!$invoice) {
+            return $this->json(['error' => 'Facture non trouvée'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['totalAmount'])) $invoice->setTotalAmount($data['totalAmount']);
+        if (isset($data['user'])) {
+            $user = $em->getRepository(User::class)->find($data['user']);
+            if (!$user) return $this->json(['error' => 'Utilisateur non trouvé'], 400);
+            $invoice->setUser($user);
+        }
+        if (!empty($data['order'])) {
+            $order = $em->getRepository(Orders::class)->find($data['order']);
+            if ($order) {
+                $invoice->setOrder($order);
+            }
+        }
+        if (array_key_exists('pdfPath', $data)) $invoice->setPdfPath($data['pdfPath']);
+        if (array_key_exists('paymentId', $data)) $invoice->setPaymentId($data['paymentId']);
+
+        $errors = $validator->validate($invoice);
+        if (count($errors) > 0) {
+            return $this->json(['violations' => array_map(fn($e) => $e->getMessage(), iterator_to_array($errors))], 400);
+        }
+
+        $em->flush();
+
+        return $this->json(['message' => 'Facture modifiée']);
+    }
+
+    #[Route('api/admin/invoices_delete/{id}', name: 'admin_invoice_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteInvoice(Request $request, int $id, EntityManagerInterface $entityManager): Response
+    {
+        $invoice = $this->entityManager->getRepository(Invoice::class)->find($id);
+
+        if (!$invoice) {
+            return $this->json(['error' => 'Facture non trouvée'], 404);
+        }
+
+        $invoiceId = $invoice->getId();
+        $order = $invoice->getOrder();
+
+        if ($order) {
+            $orderId = $order->getId();
+            $entityManager->getConnection()->executeStatement(
+                'UPDATE `invoice` SET `order_id` = NULL WHERE `id` = :id',
+                ['id' => $invoiceId]
+            );
+            $entityManager->getConnection()->executeStatement(
+                'UPDATE `orders` SET `invoice_id` = NULL WHERE `id` = :id',
+                ['id' => $orderId]
+            );
+            $entityManager->getConnection()->executeStatement(
+                'DELETE FROM `invoice` WHERE `id` = :id',
+                ['id' => $invoiceId]
+            );
+        } else {
+            $entityManager->getConnection()->executeStatement(
+                'DELETE FROM `invoice` WHERE `id` = :id',
+                ['id' => $invoiceId]
+            );
+        }
+
+        return $this->json(['message' => 'Facture supprimée']);
+    }
+
+    #[Route('/api/invoices/{id}/download', name: 'invoice_download', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function downloadInvoice(int $id, EntityManagerInterface $em): Response
+    {
+        $invoice = $em->getRepository(Invoice::class)->find($id);
+        if (!$invoice || !$invoice->getPdfPath()) {
+            return $this->json(['error' => 'Facture ou PDF introuvable'], 404);
+        }
+
+        $pdfPath = $invoice->getPdfPath();
+        $filePath = $this->getParameter('kernel.project_dir') . '/public' . $pdfPath;
+        if (!file_exists($filePath)) {
+            return $this->json(['error' => 'Fichier PDF non trouvé'], 404);
+        }
+
+        return $this->file($filePath, 'facture-' . $invoice->getId() . '.pdf');
     }
 }
