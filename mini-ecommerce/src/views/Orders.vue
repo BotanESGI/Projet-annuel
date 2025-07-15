@@ -38,7 +38,7 @@
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-2">
                 <button
-                    @click="showOrderDetails(order.id)"
+                    @click="router.push(`/orders/${order.id}`)"
                     class="inline-flex items-center px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
                     type="button"
                 >
