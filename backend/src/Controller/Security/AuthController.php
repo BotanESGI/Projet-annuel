@@ -173,7 +173,7 @@ class AuthController extends AbstractController
             $resetUrl = $this->appUrl . '/reset-password/' . $resetToken;
 
             $email = (new Email())
-                ->from('noreply@mini-ecommerce.com')
+                ->from($this->mailerFrom)
                 ->to($user->getEmail())
                 ->subject('Réinitialisation de votre mot de passe')
                 ->html($this->renderView('emails/security/reset_password.html.twig', [

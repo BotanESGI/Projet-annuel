@@ -1,4 +1,3 @@
-
 <template>
   <nav class="bg-white text-gray-800 shadow-md relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,12 +8,10 @@
 
         <!-- Menu desktop -->
         <div class="hidden md:flex space-x-8 items-center">
-
           <router-link to="/" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="home" />
             <span>Accueil</span>
           </router-link>
-
           <router-link
               v-if="isAuthenticated && isAdmin"
               to="/backoffice"
@@ -23,52 +20,38 @@
             <font-awesome-icon icon="cog" />
             <span>Back office</span>
           </router-link>
-
           <router-link to="/products" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="box-open" />
             <span>Nos produits</span>
           </router-link>
-
-          <router-link to="/about" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
-            <font-awesome-icon icon="info-circle" />
-            <span>À propos</span>
-          </router-link>
-
           <router-link to="/contact" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="envelope" />
             <span>Contact</span>
           </router-link>
-
           <router-link v-if="isAuthenticated" to="/account" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user" />
             <span>Mon compte</span>
           </router-link>
-
           <router-link v-if="!isAuthenticated" to="/login" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="right-to-bracket" />
             <span>Connexion</span>
           </router-link>
-
           <router-link v-if="!isAuthenticated" to="/register" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="user-plus" />
             <span>Inscription</span>
           </router-link>
-
-          <router-link v-if="isAuthenticated"  to="/"  @click.prevent="logout" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+          <router-link v-if="isAuthenticated" to="/" @click.prevent="logout" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
             <font-awesome-icon icon="right-from-bracket" />
             <span>Déconnexion</span>
           </router-link>
-
-
-
           <!-- Panier avec dropdown -->
           <div class="relative" @mouseenter="handleCartEnter" @mouseleave="handleCartLeave">
             <button class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded focus:outline-none">
               <font-awesome-icon icon="shopping-cart" />
               <span>Panier</span>
               <span v-if="cartItems.length" class="ml-1 bg-green-500 text-white text-xs rounded-full px-2 py-0.5">
-      {{ cartItems.length }}
-    </span>
+                {{ cartItems.length }}
+              </span>
             </button>
             <div
                 v-if="showCart"
@@ -80,7 +63,6 @@
                 <div class="loader border-4 border-blue-500 border-t-transparent rounded-full w-6 h-6 animate-spin"></div>
               </div>
               <div v-else-if="!cartItems.length" class="text-gray-500 text-center py-4">Aucun article dans le panier.</div>
-              <!-- ... -->
               <ul v-else class="divide-y divide-gray-100 max-h-52 overflow-y-auto mb-2 pr-1">
                 <li v-for="item in cartItems" :key="item.id" class="flex items-center py-2 gap-2">
                   <img :src="item.product.image" alt="" class="w-10 h-10 rounded object-cover border" />
@@ -106,11 +88,11 @@
                           class="ml-2 text-red-500 hover:underline text-xs relative"
                           :disabled="removingItemId === item.id"
                       >
-                      <span
-                          v-if="removingItemId === item.id"
-                          class="loader-mini absolute left-0 top-1/2 -translate-y-1/2"
-                          style="margin-right: 18px;"
-                      ></span>
+                        <span
+                            v-if="removingItemId === item.id"
+                            class="loader-mini absolute left-0 top-1/2 -translate-y-1/2"
+                            style="margin-right: 18px;"
+                        ></span>
                         <span v-else>Supprimer</span>
                       </button>
                     </div>
@@ -169,7 +151,7 @@
 
     <!-- Menu mobile -->
     <div v-if="isOpen" class="md:hidden px-2 pt-2 pb-3 space-y-1 bg-gray-50">
-      <router-link to="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="home" />
         <span>Accueil</span>
       </router-link>
@@ -177,41 +159,41 @@
           v-if="isAuthenticated && isAdmin"
           to="/backoffice"
           class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200"
+          @click="isOpen = false"
       >
         <font-awesome-icon icon="cog" />
         <span>Back office</span>
       </router-link>
-      <router-link to="/products" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/products" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="box-open" />
         <span>Nos produits</span>
       </router-link>
-      <router-link to="/about" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
-        <font-awesome-icon icon="info-circle" />
-        <span>À propos</span>
-      </router-link>
-      <router-link to="/contact" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/contact" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="envelope" />
         <span>Contact</span>
       </router-link>
-      <router-link v-if="isAuthenticated" to="/account" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="isAuthenticated" to="/account" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="user" />
         <span>Mon compte</span>
       </router-link>
-      <router-link v-if="!isAuthenticated" to="/login" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="!isAuthenticated" to="/login" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="right-to-bracket" />
         <span>Connexion</span>
       </router-link>
-      <router-link v-if="!isAuthenticated" to="/register" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link v-if="!isAuthenticated" to="/register" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="user-plus" />
         <span>Inscription</span>
       </router-link>
-      <router-link v-if="isAuthenticated"  to="/"  @click.prevent="logout" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
+      <router-link v-if="isAuthenticated" to="/" @click.prevent="logout; isOpen = false" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded">
         <font-awesome-icon icon="right-from-bracket" />
         <span>Déconnexion</span>
       </router-link>
-      <router-link to="/panier" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200">
+      <router-link to="/cart" class="flex items-center space-x-2 block px-3 py-2 rounded hover:bg-gray-200" @click="isOpen = false">
         <font-awesome-icon icon="shopping-cart" />
         <span>Panier</span>
+        <span v-if="cartItems.length" class="ml-1 bg-green-500 text-white text-xs rounded-full px-2 py-0.5">
+          {{ cartItems.length }}
+        </span>
       </router-link>
     </div>
   </nav>

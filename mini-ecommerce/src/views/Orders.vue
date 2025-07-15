@@ -37,15 +37,16 @@
             </div>
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-2">
-                <router-link
-                    :to="`/orders/${order.id}`"
+                <button
+                    @click="showOrderDetails(order.id)"
                     class="inline-flex items-center px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+                    type="button"
                 >
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                   Détails
-                </router-link>
+                </button>
                 <button
                     v-if="order.invoiceId"
                     @click="downloadInvoice(order.id, order.invoiceId)"
