@@ -17,7 +17,7 @@ services:
   db:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: BotanRootSecure123#
       MYSQL_DATABASE: ecommerce
       MYSQL_USER: user
       MYSQL_PASSWORD: password
@@ -59,7 +59,7 @@ services:
     image: mariadb:10.5
     command: --max-allowed-packet=64MB
     environment:
-      MYSQL_ROOT_PASSWORD: matomo_root_password
+      MYSQL_ROOT_PASSWORD: BotanRootSecure123#
       MYSQL_DATABASE: matomo
       MYSQL_USER: matomo_user
       MYSQL_PASSWORD: matomo_password

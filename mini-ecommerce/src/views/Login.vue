@@ -43,19 +43,6 @@
         </div>
 
         <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-                id="remember-me"
-                v-model="rememberMe"
-                name="remember-me"
-                type="checkbox"
-                :disabled="isLoading"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-              Se souvenir de moi
-            </label>
-          </div>
           <div class="text-sm">
             <a href="/forget-password" class="font-medium text-blue-600 hover:text-blue-500">
               Mot de passe oublié ?
@@ -98,7 +85,6 @@ import axios from 'axios'
 const router = useRouter()
 const email = ref('')
 const password = ref('')
-const rememberMe = ref(false)
 const error = ref('')
 const success = ref('')
 const isLoading = ref(false)
@@ -111,8 +97,7 @@ const connexion = async () => {
     isLoading.value = true
     const response = await axios.post('/api/login_check', {
       username: email.value,
-      password: password.value,
-      remember: rememberMe.value
+      password: password.value
     })
 
     localStorage.setItem('token', response.data.token)
