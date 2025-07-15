@@ -9,6 +9,7 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 - Connexion (Authentification via JWT)
     - Vérification de la confirmation de l'email
     - Vérification du soft delete
+    - Vérification du 2FA Authentication
 - Déconnexion
 - Gestion des rôles :
     - Utilisateur
@@ -19,6 +20,9 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 - Suppression du compte
     - Soft delete
     - Hard delete
+-Gestion du double authentification (2FA)
+    - Activation / Désactivation
+    - Test de la 2FA
 - Adresses de livraison (CRUD)
 - Adresses de facturation (CRUD)
 
@@ -124,6 +128,9 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 - Avis
 - Tags
 
+## 🛠️ SEO
+-Sitemap du site (en plus des titres, descriptions mots clée)
+
 ## ✅ Fonctionnalités demandées (15 points)
 
 ### 🔁 Gestion de projet & Historisation de code ✅
@@ -167,22 +174,22 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 ---
 
 ## 🔎 Optimisation pour la recherche naturelle (SEO)
+## 🔎 Optimisation pour la recherche naturelle (SEO)
 
 Le site doit être optimisé pour le **référencement naturel**, incluant :
 
-- Titres uniques et cohérents par page
-- Descriptions optimisées
-- Stratégie de **mots-clés** alignée avec le domaine de l'application
-
+- Titres uniques et cohérents par page ✅
+- Descriptions optimisées ✅
+- Stratégie de **mots-clés** alignée avec le domaine de l'application ✅
++ Sitemap (pas demandé mais bonus ✅)
 ---
 
 ## 🌟 Bonus (5 points)
 
-### 🔐 Authentification à deux facteurs (2FA)
-- Implémentation **sans librairie** d’un algorithme **TOTP**.
-- Compatible avec :
-- Google Authenticator
-- Microsoft Authenticator
+### 🔐 Authentification à deux facteurs (2FA) ✅
+- Implémentation **sans librairie** d’un algorithme **TOTP**. ✅
+- Google Authenticator ✅
+- Microsoft Authenticator ✅
 
 ### 📢 Campagne AdWords
 - Lancement d’une **campagne publicitaire ciblée**, avec :
@@ -210,19 +217,19 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 ---
 ## 🧱 Stack Technique
 
-| Élément              | Technologie / Outil                                 |
-|----------------------|-----------------------------------------------------|
-| **Front**            | Vue.js                                              |
-| **Back**             | Symfony                                             |
-| **Base de données**  | MySQL                                               |
-| **Conteneurisation** | Docker                                              |
-| **Reverse proxy**    | Nginx                                               |
-| **Serveur**          | Azure                                               |
-| **Nom de domaine**   | Infomaniak                                          |
-| **SSL**              | Certbot                                             |
-| **Déploiement**      | Docker                                              |
-| **Gestion de projet**| GitHub Projects                                     |
-| **SEO & Analyse**    | Titres dynamiques, descriptions SEO, Matomo         |
+| Élément              | Technologie / Outil                       |
+|----------------------|-------------------------------------------|
+| **Front**            | Vue.js                                    |
+| **Back**             | Symfony                                   |
+| **Base de données**  | MySQL                                     |
+| **Conteneurisation** | Docker                                    |
+| **Reverse proxy**    | Nginx                                     |
+| **Serveur**          | Azure                                     |
+| **Nom de domaine**   | Infomaniak                                |
+| **SSL**              | Certbot                                   |
+| **Déploiement**      | Docker                                    |
+| **Gestion de projet**| GitHub Projects                           |
+| **SEO & Analyse**    | Titres, descriptions SEO, Sitemap, Matomo |
 
 ---
 ## 🚀 Lien en production déployée sous docker

@@ -32,7 +32,8 @@ class AccountController
                 'nom' => $user->getName(),
                 'lastname' => $user->getLastname(),
                 'isVerified' => $user->getIsVerified(),
-                'roles' => $user->getRoles()
+                'roles' => $user->getRoles(),
+                'totpSecret' => $user->getTotpSecret()
             ]
         ]);
     }

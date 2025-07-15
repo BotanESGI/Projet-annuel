@@ -120,6 +120,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read', 'user:write'])]
     private bool $isDeleted = false;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $totpSecret = null;
 
     public function __construct()
     {
@@ -381,5 +383,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->isDeleted = $isDeleted;
         return $this;
+    }
+
+    public function setTotpSecret(?string $totpSecret): self
+    {
+        $this->totpSecret = $totpSecret;
+        return $this;
+    }
+
+    public function getTotpSecret(): ?string
+    {
+        return $this->totpSecret;
     }
 }
