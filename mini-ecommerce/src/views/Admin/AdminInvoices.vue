@@ -1,6 +1,6 @@
 <template>
   <div class="p-8 min-h-screen text-black">
-    <h1 class="text-3xl font-bold mb-6 text-black">Gestion des factures</h1>
+    <h1 class="text-3xl font-bold mb-6 text-black">Gestion des factures (CRUD)</h1>
     <button @click="openForm()" class="mb-4 px-4 py-2 bg-blue-600 text-white rounded">Ajouter une facture</button>
     <div v-if="loading" class="flex justify-center items-center h-40">
       <span class="loader"></span>

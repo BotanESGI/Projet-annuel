@@ -22,6 +22,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Invoice;
 use App\Entity\Orders;
+use App\Entity\Cart;
+use App\Entity\CartItem;
+use App\Entity\Product;
+use App\Repository\CartRepository;
+
 
 class AdminController extends AbstractController
 {
@@ -393,5 +398,185 @@ class AdminController extends AbstractController
         }
 
         return $this->file($filePath, 'facture-' . $invoice->getId() . '.pdf');
+    }
+
+
+    #[Route('/api/carts', name: 'admin_cart_list', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function listCarts(CartRepository $cartRepository): JsonResponse
+    {
+        $carts = $cartRepository->findAll();
+        $data = array_map(function (Cart $cart) {
+            return [
+                'id' => $cart->getId(),
+                'user' => $cart->getUser() ? [
+                    'id' => $cart->getUser()->getId(),
+                    'name' => $cart->getUser()->getName(),
+                    'lastname' => $cart->getUser()->getLastname(),
+                    'email' => $cart->getUser()->getEmail(),
+                ] : null,
+                'items' => array_map(function (CartItem $item) {
+                    $product = $item->getProduct();
+                    return [
+                        'id' => $item->getId(),
+                        'product' => $product ? [
+                            'id' => $product->getId(),
+                            'name' => $product->getName(),
+                            'description' => $product->getDescription(),
+                            'price' => $product->getPrice(),
+                            'image' => $product->getImage(),
+                        ] : null,
+                        'quantity' => $item->getQuantity(),
+                    ];
+                }, $cart->getItems()->toArray()),
+            ];
+        }, $carts);
+
+        return $this->json(['hydra:member' => $data]);
+    }
+
+    #[Route('/api/carts', name: 'admin_cart_create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function createCart(
+        Request $request,
+        UserRepository $userRepository,
+        ProductRepository $productRepository,
+        ValidatorInterface $validator,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $cart = new Cart();
+
+        // Utilisateur
+        if (empty($data['user'])) {
+            return $this->json(['violations' => [['message' => "L'utilisateur est obligatoire."]]], 400);
+        }
+        $userId = is_numeric($data['user']) ? $data['user'] : (int)preg_replace('/\D/', '', $data['user']);
+        $user = $userRepository->find($userId);
+        if (!$user) {
+            return $this->json(['violations' => [['message' => "Utilisateur non trouvé."]]], 400);
+        }
+        $cart->setUser($user);
+
+        // Items
+        if (!empty($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $itemData) {
+                if (empty($itemData['product']) || empty($itemData['quantity'])) continue;
+                $productId = is_numeric($itemData['product']) ? $itemData['product'] : (int)preg_replace('/\D/', '', $itemData['product']);
+                $product = $productRepository->find($productId);
+                if (!$product) continue;
+                $item = new CartItem();
+                $item->setProduct($product);
+                $item->setQuantity((int)$itemData['quantity']);
+                $cart->addItem($item);
+            }
+        }
+
+        $errors = $validator->validate($cart);
+        if (count($errors) > 0) {
+            return $this->json(['violations' => array_map(fn($e) => ['message' => $e->getMessage()], iterator_to_array($errors))], 400);
+        }
+
+        $em->persist($cart);
+        $em->flush();
+
+        return $this->json(['message' => 'Panier créé', 'id' => $cart->getId()]);
+    }
+
+    #[Route('/api/carts/{id}', name: 'admin_cart_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function updateCart(
+        int $id,
+        Request $request,
+        CartRepository $cartRepository,
+        UserRepository $userRepository,
+        ProductRepository $productRepository,
+        ValidatorInterface $validator,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $cart = $cartRepository->find($id);
+        if (!$cart) {
+            return $this->json(['violations' => [['message' => "Panier non trouvé."]]], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        // Utilisateur
+        if (!empty($data['user'])) {
+            $userId = is_numeric($data['user']) ? $data['user'] : (int)preg_replace('/\D/', '', $data['user']);
+            $user = $userRepository->find($userId);
+            if (!$user) {
+                return $this->json(['violations' => [['message' => "Utilisateur non trouvé."]]], 400);
+            }
+            $cart->setUser($user);
+        }
+
+        // Items (remplacement complet)
+        if (isset($data['items']) && is_array($data['items'])) {
+            // Supprimer les anciens items
+            foreach ($cart->getItems() as $oldItem) {
+                $em->remove($oldItem);
+            }
+            $cart->getItems()->clear();
+
+            // Ajouter les nouveaux items
+            foreach ($data['items'] as $itemData) {
+                if (empty($itemData['product']) || empty($itemData['quantity'])) continue;
+                $productId = is_numeric($itemData['product']) ? $itemData['product'] : (int)preg_replace('/\D/', '', $itemData['product']);
+                $product = $productRepository->find($productId);
+                if (!$product) continue;
+                $item = new CartItem();
+                $item->setProduct($product);
+                $item->setQuantity((int)$itemData['quantity']);
+                $cart->addItem($item);
+            }
+        }
+
+        $errors = $validator->validate($cart);
+        if (count($errors) > 0) {
+            return $this->json(['violations' => array_map(fn($e) => ['message' => $e->getMessage()], iterator_to_array($errors))], 400);
+        }
+
+        $em->flush();
+
+        return $this->json(['message' => 'Panier modifié']);
+    }
+
+    #[Route('/api/carts/{id}', name: 'admin_cart_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteCart(int $id, CartRepository $cartRepository, EntityManagerInterface $entityManager, Request $request): JsonResponse
+    {
+        $cart = $entityManager->getRepository(Cart::class)->find($id);
+
+        if (!$cart) {
+            return $this->json(['violations' => [['message' => "Panier non trouvé."]]], 404);
+        }
+
+        $entityManager->remove($cart);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Panier supprimé']);
+    }
+
+    #[Route('/api/users-without-cart', name: 'admin_users_without_cart', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function usersWithoutCart(UserRepository $userRepository, CartRepository $cartRepository): JsonResponse
+    {
+        $users = $userRepository->findAll();
+        $usersWithoutCart = array_filter($users, function($user) use ($cartRepository) {
+            return $cartRepository->findOneBy(['user' => $user]) === null;
+        });
+
+        $data = array_map(function($user) {
+            return [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'lastname' => $user->getLastname(),
+                'email' => $user->getEmail(),
+            ];
+        }, $usersWithoutCart);
+
+        return $this->json(['hydra:member' => $data]);
     }
 }
