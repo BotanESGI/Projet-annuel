@@ -25,6 +25,7 @@ import AdminCategory from "@/views/Admin/AdminCategory.vue";
 import AdminReviews from "@/views/Admin/AdminReviews.vue";
 import AdminUsers from "@/views/Admin/AdminUsers.vue";
 import AdminInvoices from "@/views/Admin/AdminInvoices.vue";
+import AdminCarts from "@/views/Admin/AdminCarts.vue";
 
 const routes = [
     {
@@ -179,6 +180,12 @@ const routes = [
         path: '/backoffice/invoices',
         name: 'Admin Gestion des Factures',
         component: AdminInvoices,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/backoffice/cart',
+        name: 'Admin Gestion des paniers',
+        component: AdminCarts,
         meta: { requiresAuth: true }
     },
 ]
