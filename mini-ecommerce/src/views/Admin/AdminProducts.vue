@@ -130,6 +130,11 @@ const handleSubmit = async (e) => {
     formLoading.value = false
     return
   }
+  if (form.value.type === 'DigitalProduct' && (!form.value.filesize || parseInt(form.value.filesize) <= 0)) {
+    formErrors.value = ['Veuillez renseigner une taille de fichier valide pour un produit digital.']
+    formLoading.value = false
+    return
+  }
   const token = localStorage.getItem('token')
   let imageUrl = form.value.image
   if (form.value.imageFile) {
@@ -417,7 +422,7 @@ onMounted(() => {
             </div>
             <div class="mb-4">
               <label class="block mb-1">Taille du fichier (Ko)</label>
-              <input v-model="form.filesize" type="number" min="0" class="w-full border rounded px-3 py-2" />
+              <input v-model="form.filesize" type="number" min="0" required class="w-full border rounded px-3 py-2" />
             </div>
             <div class="mb-4">
               <label class="block mb-1">Type de fichier</label>

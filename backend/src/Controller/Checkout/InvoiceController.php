@@ -39,7 +39,9 @@ class InvoiceController extends AbstractController
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        file_put_contents($pdfPath, $dompdf->output());
+        if (file_put_contents($pdfPath, $dompdf->output()) === false) {
+            return $this->json(['error' => 'Impossible d\'écrire le fichier PDF'], 500);
+        }
 
         return $this->json(['path' => '/invoices/' . $pdfFilename]);
     }
