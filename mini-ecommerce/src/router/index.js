@@ -205,17 +205,6 @@ const routes = [
         }
     },
     {
-        path: '/orders/:id',
-        name: 'Détail de la commande',
-        component: () => OrderDetail,
-        meta: {
-            requiresAuth: true,
-            title: 'Détail de la commande - Mini Ecommerce',
-            description: 'Consultez le détail de votre commande.',
-            keywords: ['bytmeuh', 'commande', 'détail', 'facture', 'ecommerce']
-        }
-    },
-    {
         path: '/backoffice',
         name: 'Back Office',
         component: Backoffice,

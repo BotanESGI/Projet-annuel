@@ -20,7 +20,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ReviewController extends AbstractController
 {
-    #[Route('/api/reviews', name: 'create_review', methods: ['POST'])]
+    #[Route('/api/reviews_create', name: 'create_review', methods: ['POST'])]
     public function __invoke(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -79,7 +79,7 @@ class ReviewController extends AbstractController
         );
     }
 
-    #[Route('/api/reviews/{id}', name: 'edit_review', methods: ['PUT'])]
+    #[Route('/api/reviews_edit/{id}', name: 'edit_review', methods: ['PUT'])]
     public function editReview(
         int $id,
         Request $request,

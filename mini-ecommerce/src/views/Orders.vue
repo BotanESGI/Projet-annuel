@@ -1,179 +1,264 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl w-full space-y-8">
-      <AlertMessage :message="success" type="success" />
-      <AlertMessage :message="error" type="error" />
-      <div v-if="isLoading" class="flex flex-col items-center justify-center w-full py-12">
-        <svg class="animate-spin h-12 w-12 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="mt-4 text-purple-600 font-semibold">Chargement des commandes...</p>
+  <div class="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl mt-8 text-black">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-16">
+      <svg class="animate-spin h-14 w-14 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="mt-4 text-purple-600 font-semibold">Chargement de vos commandes...</p>
+    </div>
+    <div v-else>
+      <h2 class="text-3xl font-bold mb-6 text-purple-700">Mes commandes</h2>
+      <div v-if="orders.length === 0" class="text-gray-500 text-center py-8">
+        Aucune commande trouvée.
       </div>
-      <div v-else>
-        <h2 class="text-center text-3xl font-extrabold text-gray-900 drop-shadow">Mes commandes</h2>
-        <div v-if="orders.length === 0" class="bg-white rounded-lg shadow p-8 text-center">
-          <p class="text-gray-500 mb-4 text-lg">Vous n'avez pas encore passé de commande.</p>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+          <tr class="bg-purple-100 text-purple-700 uppercase">
+            <th class="px-6 py-3 text-left">Commande</th>
+            <th class="px-6 py-3 text-left">Date</th>
+            <th class="px-6 py-3 text-left">Total</th>
+            <th class="px-6 py-3 text-left">Articles</th>
+            <th class="px-6 py-3 text-left">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="order in orders" :key="order.id" class="hover:bg-purple-50 transition">
+            <td class="px-6 py-4 font-semibold">#{{ order.id }}</td>
+            <td class="px-6 py-4">{{ formatDate(order.date) }}</td>
+            <td class="px-6 py-4 font-bold text-purple-700">{{ formatPrice(order.total) }} €</td>
+            <td class="px-6 py-4">{{ order.itemsCount }}</td>
+            <td class="px-6 py-4 flex flex-col md:flex-row gap-2">
+              <button
+                  @click="openOrderDetail(order.id)"
+                  class="bg-purple-600 text-white py-2 px-4 rounded-lg shadow hover:bg-purple-700 transition text-center"
+              >
+                Voir le détail
+              </button>
+              <button
+                  v-if="order.invoiceId"
+                  @click="downloadInvoice(order.invoiceId)"
+                  class="bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700 transition text-center"
+              >
+                Télécharger la facture
+              </button>
+              <span v-else class="text-gray-400 text-xs mt-1 md:mt-0">Facture non dispo</span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="error" class="text-red-600 bg-red-50 px-4 py-2 rounded shadow-lg mt-6 text-center">{{ error }}</div>
+    </div>
+
+    <!-- Modal détail commande -->
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full relative overflow-y-auto max-h-[90vh]">
+        <button @click="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-purple-700 text-2xl">&times;</button>
+        <div v-if="detailLoading" class="flex flex-col items-center justify-center py-16">
+          <svg class="animate-spin h-14 w-14 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="mt-4 text-purple-600 font-semibold">Chargement des détails de la commande...</p>
         </div>
-        <div v-else class="space-y-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">Historique de vos commandes</h3>
-            <span class="bg-gray-100 text-black text-xs font-semibold px-3 py-1 rounded-full">{{ orders.length }} commande{{ orders.length > 1 ? 's' : '' }}</span>
+        <div v-else-if="detailError" class="text-red-600 bg-red-50 px-4 py-2 rounded shadow-lg text-center">
+          {{ detailError }}
+        </div>
+        <div v-else-if="orderDetail">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M8 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h2 class="text-3xl font-bold">Commande #{{ orderDetail.id }}</h2>
+            </div>
           </div>
-          <div v-for="order in orders" :key="order.id" class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow border border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex-1">
+          <div class="flex flex-col md:flex-row gap-6 mb-6">
+            <div class="flex-1 bg-white rounded-xl shadow-lg p-5">
               <div class="flex items-center gap-2 mb-2">
-                <span class="text-black font-bold text-lg">#{{ order.id }}</span>
-                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Passée le {{ order.date }}</span>
+                <span class="text-gray-500">Date :</span>
+                <span class="font-medium">{{ formatDate(orderDetail.date) }}</span>
               </div>
-              <div>
-                <span class="text-black font-medium">
-                {{ order.itemsCount }} produit{{ order.itemsCount > 1 ? 's' : '' }}
-                </span>
-                <span class="text-black font-medium block mt-1">
-                  Total : <span class="text-black">{{ order.total }} €</span>
-              </span>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-gray-500">Total :</span>
+                <span class="font-bold text-purple-700 text-lg">{{ formatPrice(orderDetail.total) }} €</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500">Produits :</span>
+                <span class="font-medium">{{ totalQuantity }}</span>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-2">
-                <button
-                    @click="router.push(`/orders/${order.id}`)"
-                    class="inline-flex items-center px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
-                    type="button"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Détails
-                </button>
-                <button
-                    v-if="order.invoiceId"
-                    @click="downloadInvoice(order.id, order.invoiceId)"
-                    class="inline-flex items-center px-5 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:white transition"
-                    type="button"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  Facture
-                </button>
+            <div class="flex-1 flex flex-col gap-4">
+              <div class="bg-white rounded-xl shadow-lg p-5">
+                <h4 class="font-semibold mb-1 text-purple-700">Adresse de livraison</h4>
+                <p class="text-gray-700 text-sm">
+                  {{ orderDetail.shippingAddress?.street }}<br>
+                  {{ orderDetail.shippingAddress?.postalCode }} {{ orderDetail.shippingAddress?.city }}
+                </p>
               </div>
+              <div class="bg-white rounded-xl shadow-lg p-5">
+                <h4 class="font-semibold mb-1 text-purple-700">Adresse de facturation</h4>
+                <p class="text-gray-700 text-sm">
+                  {{ orderDetail.billingAddress?.street }}<br>
+                  {{ orderDetail.billingAddress?.postalCode }} {{ orderDetail.billingAddress?.city }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-xl p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4 text-purple-700">Produits de la commande</h2>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                <tr class="bg-purple-100 text-purple-700 uppercase">
+                  <th class="px-6 py-3 text-left">Produit</th>
+                  <th class="px-6 py-3 text-left">Type</th>
+                  <th class="px-6 py-3 text-left">Quantité</th>
+                  <th class="px-6 py-3 text-left">Prix Unitaire</th>
+                  <th class="px-6 py-3 text-left">Total</th>
+                  <th class="px-6 py-3 text-left">Statut</th>
+                  <th class="px-6 py-3 text-left">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="item in orderDetail.items" :key="item.id" class="hover:bg-purple-50 transition">
+                  <td class="px-6 py-4 flex items-center gap-3">
+                    <img v-if="item.product.image" :src="item.product.image" :alt="item.product.name" class="w-14 h-14 object-cover rounded shadow" />
+                    <span>{{ item.product.name }}</span>
+                  </td>
+                  <td class="px-6 py-4">{{ getProductType(item.product) }}</td>
+                  <td class="px-6 py-4">{{ item.quantity }}</td>
+                  <td class="px-6 py-4">{{ formatPrice(item.product.price) }} €</td>
+                  <td class="px-6 py-4">{{ formatPrice(item.product.price * item.quantity) }} €</td>
+                  <td class="px-6 py-4">
+                    <template v-if="getProductType(item.product) === 'Produit digital'">
+                      <a v-if="item.product.downloadLink" :href="item.product.downloadLink" class="text-blue-600 hover:underline font-semibold">Télécharger</a>
+                      <span v-else class="text-gray-400">Lien non dispo</span>
+                    </template>
+                    <template v-else>
+                      <span class="inline-block bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">Préparation</span>
+                    </template>
+                  </td>
+                  <td class="px-6 py-4">
+                    <a
+                        :href="`/product/${item.product.id}?category=${item.product.defaultCategory?.id || ''}`"
+                        class="inline-block bg-purple-600 text-white py-2 px-4 rounded-lg shadow hover:bg-purple-700 transition"
+                        target="_blank"
+                    >
+                      Voir l'article
+                    </a>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-if="!orderDetail.items || orderDetail.items.length === 0" class="text-gray-500 text-center py-8">
+              Aucun produit trouvé pour cette commande.
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Modal détails commande (inchangé, mais couleurs neutres) -->
-    <transition name="fade">
-      <div v-if="showDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative animate-fadeIn">
-          <button @click="showDetailsModal = false" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Commande #{{ orderDetails.id }}</h3>
-          <p class="text-gray-600 mb-2">Date : <span class="font-medium">{{ orderDetails.date }}</span></p>
-          <p class="text-gray-600 mb-2">Total : <span class="font-medium text-gray-900">{{ orderDetails.total }} €</span></p>
-          <div class="mb-4">
-            <h4 class="font-semibold text-gray-800 mb-1">Adresse de livraison :</h4>
-            <p class="text-gray-700 text-sm">
-              {{ orderDetails.shippingAddress?.street }}, {{ orderDetails.shippingAddress?.postalCode }} {{ orderDetails.shippingAddress?.city }}
-            </p>
-          </div>
-          <div>
-            <h4 class="font-semibold text-gray-800 mb-1">Produits :</h4>
-            <ul class="divide-y divide-gray-50">
-              <li v-for="item in orderDetails.items" :key="item.product.id" class="py-2 flex justify-between items-center">
-                <span class="text-gray-700">{{ item.product.name }}</span>
-                <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded">{{ item.quantity }}x</span>
-              </li>
-            </ul>
-          </div>
-          <button
-              @click="showDetailsModal = false"
-              class="mt-6 w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition"
-          >
-            Fermer
-          </button>
-        </div>
-      </div>
-    </transition>
+    <!-- Fin modal -->
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import AlertMessage from '@/components/AlertMessage.vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const orders = ref([])
-const success = ref('')
+const loading = ref(true)
 const error = ref('')
-const isLoading = ref(true)
-const showDetailsModal = ref(false)
-const orderDetails = ref({})
 
-onMounted(async () => {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    router.push('/login')
-    return
-  }
-  try {
-    const res = await axios.get('/api/my-orders', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    orders.value = res.data.orders
-  } catch (err) {
-    error.value = "Impossible de charger les commandes."
-  } finally {
-    isLoading.value = false
-  }
-})
+const showModal = ref(false)
+const orderDetail = ref(null)
+const detailLoading = ref(false)
+const detailError = ref('')
 
-const downloadInvoice = async (orderId, invoiceId) => {
+function formatDate(dateString) {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('fr-FR')
+}
+
+function formatPrice(price) {
+  return Number(price).toFixed(2).replace('.', ',')
+}
+
+async function downloadInvoice(invoiceId) {
   try {
-    isLoading.value = true
     const token = localStorage.getItem('token')
-    const response = await axios.get(`/api/invoices/${invoiceId}/download`, {
-      headers: {Authorization: `Bearer ${token}`},
+    const res = await axios.get(`/api/invoices/${invoiceId}/download`, {
+      headers: { Authorization: `Bearer ${token}` },
       responseType: 'blob'
     })
-
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(new Blob([res.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `facture-${orderId}.pdf`)
+    link.setAttribute('download', `facture-${invoiceId}.pdf`)
     document.body.appendChild(link)
     link.click()
-
+    link.remove()
     window.URL.revokeObjectURL(url)
-    document.body.removeChild(link)
-  } catch (err) {
-    error.value = "Erreur lors du téléchargement de la facture"
-    console.error(err)
-  } finally {
-    isLoading.value = false
+  } catch (e) {
+    error.value = "Erreur lors du téléchargement de la facture."
   }
 }
 
-const showOrderDetails = async (orderId) => {
-  const token = localStorage.getItem('token')
+async function openOrderDetail(orderId) {
+  showModal.value = true
+  detailLoading.value = true
+  detailError.value = ''
+  orderDetail.value = null
   try {
-    const res = await axios.get(`/api/orders/${orderId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const token = localStorage.getItem('token')
+    const res = await axios.get(`/api/orders_details/${orderId}`, {
+      headers: { Authorization: `Bearer ${token}` }
     })
-    orderDetails.value = res.data
-    showDetailsModal.value = true
-  } catch (err) {
-    error.value = "Impossible de charger le détail de la commande."
+    orderDetail.value = res.data.order
+  } catch (e) {
+    detailError.value = "Impossible de charger le détail de la commande."
+  } finally {
+    detailLoading.value = false
   }
 }
+
+function closeModal() {
+  showModal.value = false
+  orderDetail.value = null
+}
+
+const totalQuantity = computed(() =>
+    orderDetail.value && orderDetail.value.items
+        ? orderDetail.value.items.reduce((sum, item) => sum + (item.quantity || 0), 0)
+        : 0
+)
+
+function getProductType(product) {
+  if (!product) return ''
+  if (product['@type'] && product['@type'].includes('PhysicalProduct')) return 'Produit physique'
+  if (product['@type'] && product['@type'].includes('DigitalProduct')) return 'Produit digital'
+  return product.productType || 'Type inconnu'
+}
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const res = await axios.get('/api/my-orders', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    orders.value = res.data.orders || []
+  } catch (e) {
+    error.value = "Impossible de charger vos commandes."
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -183,21 +268,5 @@ const showOrderDetails = async (orderId) => {
 @keyframes spin {
   from { transform: rotate(0deg);}
   to { transform: rotate(360deg);}
-}
-.transition-shadow {
-  transition: box-shadow 0.3s ease;
-}
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.2s;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-.animate-fadeIn {
-  animation: fadeIn 0.3s;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px);}
-  to { opacity: 1; transform: translateY(0);}
 }
 </style>
