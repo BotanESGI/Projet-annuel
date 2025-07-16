@@ -279,7 +279,7 @@ export default {
     const cartMessage = ref('');
 
     const reviewMessageClass = computed(() => {
-      if (reviewMessage.value && reviewMessage.value.toLowerCase().includes('succès')) {
+      if (reviewMessage.value && reviewMessage.value.toLowerCase().includes('succès') || reviewMessage.value.toLowerCase().includes('visible')) {
         return 'mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200';
       }
       return 'mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200';
@@ -396,7 +396,7 @@ export default {
           reviewMessage.value = "Erreur d'authentification. Veuillez vous reconnecter.";
           return;
         }
-        await axios.post('/api/reviews', {
+        await axios.post('/api/reviews_create', {
           content: newReview.value.content,
           rating: newReview.value.rating,
           product: `/api/products/${productId.value}`
@@ -450,7 +450,7 @@ export default {
       }
       submittingReview.value = true;
       try {
-        await axios.put(`/api/reviews/${editingReview.value.id}`, {
+        await axios.put(`/api/reviews_edit/${editingReview.value.id}`, {
           content: editReviewContent.value,
           rating: editReviewRating.value
         }, {
