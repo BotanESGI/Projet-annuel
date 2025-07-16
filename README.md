@@ -197,11 +197,10 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 - Périmètre géographique précis
 
 ### 📊 Analytics
-- Instrumentation avec des outils comme **Matomo**.
-- Informations à remonter :
-- Nombre d’utilisateurs
-- Durée moyenne des sessions
-- Taux de rebond
+- Instrumentation avec des outils comme **Matomo**. ✅
+- Nombre d’utilisateurs ✅
+- Durée moyenne des sessions ✅
+- Taux de rebond ✅
 
 ### ❗ Gestion des erreurs
 - Utilisation de **GlitchTip** ou **Sentry (GitHub Student)**.
