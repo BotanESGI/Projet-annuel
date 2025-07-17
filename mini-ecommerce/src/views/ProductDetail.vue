@@ -576,11 +576,11 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         })
-        cartMessage.value = 'Produit ajouté au panier avec succès'
+        cartMessage.value = 'Produit ajouté au panier avec succès, Redirection ....'
         cartMessageType.value = 'success'
         setTimeout(() => {
           router.push('/cart')
-        }, 4000)
+        }, 3000)
       } catch (err) {
         cartMessage.value = "Erreur lors de l'ajout au panier"
         cartMessageType.value = 'error'

@@ -142,7 +142,7 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 ### 🎨 Conception et Interface ✅
 - L'application doit être **responsive** : ordinateur, mobile, tablette.✅
 - Design **cohérent** et **agréable visuellement**.✅
-- **Maquettes** des pages principales à présenter lors de la soutenance.
+- **Maquettes** des pages principales à présenter lors de la soutenance : Figma ✅
 
 ### 🖥️ Framework côté client ✅
 - Le client Web doit être conçu avec **Vue.js**. ✅
@@ -153,7 +153,7 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 
 ### 🗄️ Modélisation, Requêtage SQL & Base de données ✅
 - Utilisation d'une base de données **relationnelle SQL** : MySQL ✅
-- Le modèle de données doit être conçu en amont et justifié à la soutenance.
+- Le modèle de données doit être conçu en amont et justifié à la soutenance : Schéma conceptuel relationnel ✅
 
 ---
 
@@ -173,7 +173,6 @@ Projet Ecommerce pour la vente de produits digitaux et physiques, développé av
 
 ---
 
-## 🔎 Optimisation pour la recherche naturelle (SEO)
 ## 🔎 Optimisation pour la recherche naturelle (SEO)
 
 Le site doit être optimisé pour le **référencement naturel**, incluant :
@@ -197,11 +196,10 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 - Périmètre géographique précis
 
 ### 📊 Analytics
-- Instrumentation avec des outils comme **Matomo**.
-- Informations à remonter :
-- Nombre d’utilisateurs
-- Durée moyenne des sessions
-- Taux de rebond
+- Instrumentation avec des outils comme **Matomo**. ✅
+- Nombre d’utilisateurs ✅
+- Durée moyenne des sessions ✅
+- Taux de rebond ✅
 
 ### ❗ Gestion des erreurs
 - Utilisation de **GlitchTip** ou **Sentry (GitHub Student)**.
@@ -238,6 +236,27 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 
 ---
 
+## 🚀 Lien de la maquette Figma
+
+[https://www.figma.com/design/JoheKPuxsYa1LSMnI4Odh6/Projet-Annuel?node-id=0-1&p=f](https://www.figma.com/design/JoheKPuxsYa1LSMnI4Odh6/Projet-Annuel?node-id=0-1&p=f)
+
+---
+
+---
+
+## 🚀 Schéma conceptuel relationnel de la base de données
+
+![Shema](ShemaBDD.png)
+
+---
+
+## 🚀 Sitemap
+
+[https://bytemeuh-bytemeuh.fr/sitemap.xml](https://bytemeuh-bytemeuh.fr/sitemap.xml)
+
+---
+
+
 ## 🛠️ Installation & Configuration en Local
 
 ```bash
@@ -251,3 +270,4 @@ docker-compose up -d
 docker exec -it projet-annuel_web_1 php bin/console doctrine:migrations:migrate --no-interaction
 docker exec -it projet-annuel_web_1 php bin/console doctrine:fixtures:load --no-interaction
 ```
+
