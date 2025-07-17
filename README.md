@@ -250,6 +250,12 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 
 ---
 
+## 🚀 Sitemap
+
+[https://bytemeuh-bytemeuh.fr/sitemap.xml](https://bytemeuh-bytemeuh.fr/sitemap.xml)
+
+---
+
 
 ## 🛠️ Installation & Configuration en Local
 
