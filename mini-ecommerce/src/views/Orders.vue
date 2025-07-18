@@ -191,6 +191,16 @@ function formatPrice(price) {
 
 async function downloadInvoice(invoiceId) {
   try {
+
+    if (window._paq) {
+      window._paq.push([
+        'trackEvent',
+        'Facture',
+        'Téléchargement',
+        invoiceId
+      ]);
+    }
+
     const token = localStorage.getItem('token')
     const res = await axios.get(`/api/invoices/${invoiceId}/download`, {
       headers: { Authorization: `Bearer ${token}` },

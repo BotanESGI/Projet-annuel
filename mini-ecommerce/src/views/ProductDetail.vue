@@ -72,7 +72,7 @@
               <span v-for="i in 5" :key="i" class="text-xl">
                 <span :class="i <= Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-300'">★</span>
               </span>
-                <span class="ml-2 text-sm text-gray-600" v-if="reviews.length > 0">
+              <span class="ml-2 text-sm text-gray-600" v-if="reviews.length > 0">
                 {{ averageRating.toFixed(1) }} / 5 ({{ reviews.filter(r => r.status === 'VALIDATED').length }} avis)
                 </span>
               <span class="ml-2 text-sm text-gray-600" v-else>
@@ -182,7 +182,7 @@
         </div>
         <div v-if="reviews.length > displayLimit" class="mt-4 flex justify-center">
           <button
-              @click="showAllReviews = !showAllReviews"
+              @click="handleShowAllReviews"
               class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow"
           >
             {{ showAllReviews ? 'Voir moins' : `Voir plus (${reviews.length - displayLimit} avis supplémentaires)` }}
@@ -578,6 +578,17 @@ export default {
         })
         cartMessage.value = 'Produit ajouté au panier avec succès, Redirection ....'
         cartMessageType.value = 'success'
+
+        if (window._paq) {
+          window._paq.push([
+            'trackEvent',
+            'Panier',
+            'Ajout',
+            product.value.name,
+            quantity.value
+          ]);
+        }
+
         setTimeout(() => {
           router.push('/cart')
         }, 3000)
@@ -588,6 +599,18 @@ export default {
         addingToCart.value = false
       }
     }
+
+    const handleShowAllReviews = () => {
+      showAllReviews.value = !showAllReviews.value;
+      if (window._paq) {
+        window._paq.push([
+          'trackEvent',
+          'Avis',
+          'Clique Voir Plus',
+          product.value.name || productId.value
+        ]);
+      }
+    };
 
     const hoverRating = ref(0);
 
@@ -642,6 +665,7 @@ export default {
       deletingReviewId,
       cartMessage,
       cartMessageType,
+      handleShowAllReviews,
       averageRating
     };
   }
