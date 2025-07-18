@@ -94,6 +94,14 @@ const confirmPayment = async () => {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
 
+    if (window._paq) {
+      window._paq.push([
+        'trackEvent',
+        'Paiement',
+        'Panier payé',
+        totalPrice.value
+      ]);
+    }
     sessionStorage.setItem('orderConfirmedId', confirmRes.data.orderId)
     router.push(`/order/${confirmRes.data.orderId}/confirmation`)
   } catch (e) {

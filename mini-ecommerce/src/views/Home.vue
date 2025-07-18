@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 
 const tabs = [
   { key: 'recentlyViewed', label: 'Récemment Consultés' },
@@ -274,6 +274,17 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+watch(activeTab, (newTab) => {
+  if (window._paq) {
+    window._paq.push([
+      'trackEvent',
+      'HomeTab',
+      'Consultation',
+      newTab
+    ]);
+  }
+});
 </script>
 
 <style scoped>

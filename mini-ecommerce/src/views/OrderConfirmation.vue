@@ -120,6 +120,15 @@ onMounted(async () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     order.value = res.data.order
+    if (window._paq) {
+      window._paq.push([
+        'trackEvent',
+        'Commande',
+        'Finalisation',
+        order.id,
+        order.total
+      ]);
+    }
   } catch (e) {
     error.value = e.response?.data?.message || 'Erreur lors du chargement de la commande.'
   } finally {

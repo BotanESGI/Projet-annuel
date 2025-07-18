@@ -126,13 +126,13 @@
     </div>
   </div>
 </template>
-
 <script setup>
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const debounceTimeout = ref(null)
 
 const products = ref([])
 const categories = ref([])
@@ -155,19 +155,21 @@ const API_URL = '/api/products'
 const CATEGORIES_URL = '/api/categories'
 
 onMounted(async () => {
-
   const categoryId = route.query.category
   if (categoryId) {
     selectedCategoryId.value = parseInt(categoryId)
     filters.value.category = selectedCategoryId.value
   }
   await fetchCategories()
-
   await fetchProducts()
-
   if (selectedCategoryId.value) {
     selectedCategory.value = categories.value.find(c => c.id === selectedCategoryId.value)
   }
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 
 const fetchCategories = async () => {
@@ -188,7 +190,6 @@ const fetchProducts = async () => {
   try {
     loading.value = true
     let url = API_URL + '?'
-
     if (filters.value.search) url += `search=${encodeURIComponent(filters.value.search)}&`
     if (filters.value.type) url += `type=${filters.value.type}&`
     if (filters.value.minPrice) url += `min_price=${filters.value.minPrice}&`
@@ -196,9 +197,7 @@ const fetchProducts = async () => {
     if (filters.value.priceSort) url += `price_sort=${filters.value.priceSort}&`
     if (filters.value.dateSort) url += `date_sort=${filters.value.dateSort}&`
     if (filters.value.category) url += `category=${filters.value.category}&`
-
     const response = await axios.get(url)
-
     if (response.data && response.data['hydra:member']) {
       products.value = response.data['hydra:member']
     } else {
@@ -223,7 +222,6 @@ const applyFilters = async () => {
   try {
     loading.value = true
     let url = API_URL + '?'
-
     if (filters.value.search) url += `search=${encodeURIComponent(filters.value.search)}&`
     if (filters.value.type) url += `type=${filters.value.type}&`
     if (filters.value.minPrice) url += `min_price=${filters.value.minPrice}&`
@@ -231,9 +229,7 @@ const applyFilters = async () => {
     if (filters.value.priceSort) url += `price_sort=${filters.value.priceSort}&`
     if (filters.value.dateSort) url += `date_sort=${filters.value.dateSort}&`
     if (filters.value.category) url += `category=${filters.value.category}&`
-
     const response = await axios.get(url)
-
     if (response.data && response.data['hydra:member']) {
       products.value = response.data['hydra:member']
     } else {
@@ -249,7 +245,6 @@ const applyFilters = async () => {
 
 const filteredProducts = computed(() => {
   let result = [...products.value]
-
   if (filters.value.search) {
     const searchLower = filters.value.search.toLowerCase()
     result = result.filter(product =>
@@ -257,7 +252,6 @@ const filteredProducts = computed(() => {
         product.description.toLowerCase().includes(searchLower)
     )
   }
-
   if (filters.value.type) {
     result = result.filter(product => {
       if (filters.value.type === 'digital') return product['@type'] === 'DigitalProduct'
@@ -265,7 +259,6 @@ const filteredProducts = computed(() => {
       return true
     })
   }
-
   if (filters.value.category) {
     result = result.filter(product => {
       if (product.defaultCategory && product.defaultCategory.id === filters.value.category) {
@@ -274,39 +267,54 @@ const filteredProducts = computed(() => {
       return product.categories && product.categories.some(category => category.id === filters.value.category);
     });
   }
-
   if (filters.value.minPrice) {
     result = result.filter(product => product.price >= parseFloat(filters.value.minPrice))
   }
-
   if (filters.value.maxPrice) {
     result = result.filter(product => product.price <= parseFloat(filters.value.maxPrice))
   }
-
   if (filters.value.priceSort) {
     result.sort((a, b) => {
       if (filters.value.priceSort === 'asc') return a.price - b.price
       return b.price - a.price
     })
   }
-
   if (filters.value.dateSort) {
     result.sort((a, b) => {
-
       if (!a.createdAt && !b.createdAt) return 0;
       if (!a.createdAt) return filters.value.dateSort === 'asc' ? 1 : -1;
       if (!b.createdAt) return filters.value.dateSort === 'asc' ? -1 : 1;
-
       const timestampA = new Date(a.createdAt).getTime();
       const timestampB = new Date(b.createdAt).getTime();
-
       return filters.value.dateSort === 'asc'
           ? timestampA - timestampB
           : timestampB - timestampA;
     });
   }
-
   return result
+})
+
+watch(selectedCategoryId, () => {
+  resetScrollTracking()
+})
+
+watch(() => filters.value.search, (newSearch) => {
+  if (debounceTimeout.value) clearTimeout(debounceTimeout.value)
+  if (newSearch) {
+    debounceTimeout.value = setTimeout(() => {
+      if (window._paq) {
+        window._paq.push([
+          'trackEvent',
+          'Recherche',
+          'Recherche effectuée',
+          newSearch
+        ])
+      }
+      applyFilters()
+    }, 3000)
+  } else {
+    applyFilters()
+  }
 })
 
 const formatPrice = (price) => {
@@ -322,6 +330,47 @@ watch(() => route.query, (newQuery) => {
     applyFilters()
   }
 }, { deep: true })
+
+const scrollTracked = ref({
+  '25': false,
+  '50': false,
+  '75': false,
+  '100': false
+})
+
+function trackScrollMatomo(percent) {
+  if (window._paq) {
+    window._paq.push([
+      'trackEvent',
+      'Scroll',
+      'Scroll Products',
+      `Scroll ${percent}%`,
+    ])
+  }
+}
+
+function handleScroll() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight
+  if (docHeight <= 0) return
+  const percent = Math.round((scrollTop / docHeight) * 100)
+  if (percent >= 25 && !scrollTracked.value['25']) {
+    trackScrollMatomo(25)
+    scrollTracked.value['25'] = true
+  }
+  if (percent >= 50 && !scrollTracked.value['50']) {
+    trackScrollMatomo(50)
+    scrollTracked.value['50'] = true
+  }
+  if (percent >= 75 && !scrollTracked.value['75']) {
+    trackScrollMatomo(75)
+    scrollTracked.value['75'] = true
+  }
+  if (percent >= 100 && !scrollTracked.value['100']) {
+    trackScrollMatomo(100)
+    scrollTracked.value['100'] = true
+  }
+}
 </script>
 
 <style scoped>
