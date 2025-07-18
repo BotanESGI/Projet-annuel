@@ -94,12 +94,12 @@ const confirmPayment = async () => {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
 
-    if (window._paq) {
+    if (window._paq && confirmRes.data.orderTotal !== undefined) {
       window._paq.push([
         'trackEvent',
         'Paiement',
         'Panier payé',
-        totalPrice.value
+        confirmRes.data.orderTotal
       ]);
     }
     sessionStorage.setItem('orderConfirmedId', confirmRes.data.orderId)

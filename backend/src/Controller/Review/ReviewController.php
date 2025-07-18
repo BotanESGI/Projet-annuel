@@ -151,6 +151,8 @@ class ReviewController extends AbstractController
             ->andWhere('o.user = :userId')
             ->setParameter('productId', $productId)
             ->setParameter('userId', $user->getId())
+            ->orderBy('o.date', 'DESC')
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
 

@@ -263,7 +263,8 @@ class OrderController extends AbstractController
 
         return $this->json([
             'message' => 'Commande créée avec succès',
-            'orderId' => $order->getId()
+            'orderId' => $order->getId(),
+            'orderTotal' => $order->getTotal(),
         ]);
     }
 }
