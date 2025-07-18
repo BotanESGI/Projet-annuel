@@ -243,6 +243,14 @@ const inscription = async () => {
 
     success.value = response.data.message || 'Inscription réussie ! Redirection...'
 
+    if (window._paq) {
+      window._paq.push([
+        'trackEvent',
+        'Inscription',
+        'Email saisi',
+        email.value
+      ]);
+    }
   } catch (err) {
     if (err.response) {
       if (err.response.data.errors) {

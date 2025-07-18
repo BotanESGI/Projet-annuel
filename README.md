@@ -256,6 +256,12 @@ Le site doit être optimisé pour le **référencement naturel**, incluant :
 
 ---
 
+## 🚀 KPI Matomo
+
+- [KPI_Analytique_web.xlsx](KPI_Analytique_web.xlsx)
+- 
+---
+
 
 ## 🛠️ Installation & Configuration en Local
 

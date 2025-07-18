@@ -219,6 +219,14 @@ const deleteAccount = async (type) => {
     }
     return;
   }
+  if (window._paq) {
+    window._paq.push([
+      'trackEvent',
+      'Compte',
+      'Suppression',
+      type === 'hard' ? 'Suppression HARD' : 'Suppression SOFT'
+    ]);
+  }
   success.value = '';
   error.value = '';
   isLoading.value = true;
